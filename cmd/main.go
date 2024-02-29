@@ -1,8 +1,8 @@
 package main
 
 import (
+	"github.com/Checkmarx-Containers/containers-resolver/pkg/abstraction"
 	"os"
-	"syftPoc/pkg/abstraction"
 )
 
 const defaultImage = "alpine:3.19"

@@ -1,9 +1,9 @@
 package abstraction
 
 import (
+	"github.com/Checkmarx-Containers/containers-resolver/internal/files"
+	"github.com/Checkmarx-Containers/containers-resolver/internal/syftExtractor"
 	"log"
-	"syftPoc/internal/files"
-	"syftPoc/internal/syftExtractor"
 )
 
 func GetContainerResolution(scanPath string, resolutionFilePath string, images []string, isDebug bool) {
