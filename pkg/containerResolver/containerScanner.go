@@ -11,16 +11,16 @@ func Resolve(scanPath string, resolutionFilePath string, images []string, isDebu
 	log.Printf("Resolve func parameters: scanPath=%s, resolutionFilePath=%s, images=%s, isDebug=%t", scanPath, resolutionFilePath, images, isDebug)
 
 	//1. extract files
-	filesWithImages := files.ExtractFilesBySuffix(scanPath, []string{"Dockerfile"})
+	filesWithImages, _ := files.ExtractFiles(scanPath)
 
 	//2. extract images from files
 	imagesFromFiles := files.ExtractImagesFromFiles(filesWithImages)
 
 	//3. merge all images
-	images = append(images, imagesFromFiles...)
+	imagesToAnalyze := files.MergeImages(toImageModels(images), imagesFromFiles)
 
 	//4. get images resolution
-	resolutionResult, err := syftExtractor.AnalyzeImages(images)
+	resolutionResult, err := syftExtractor.AnalyzeImages(imagesToAnalyze)
 	if err != nil {
 		log.Fatal("Could not analyze images", err)
 	}
@@ -30,4 +30,18 @@ func Resolve(scanPath string, resolutionFilePath string, images []string, isDebu
 	if err != nil {
 		log.Fatal("Could not save resolution result", err)
 	}
+}
+
+func toImageModels(images []string) []files.ImageModel {
+	var imageNames []files.ImageModel
+
+	for _, image := range images {
+		imageNames = append(imageNames, files.ImageModel{
+			Name:   image,
+			Origin: files.UserInput,
+			Path:   files.NoFilePath,
+		})
+	}
+
+	return imageNames
 }

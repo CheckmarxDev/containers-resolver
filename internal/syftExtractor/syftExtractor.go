@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/Checkmarx-Containers/containers-resolver/internal/files"
 	"github.com/anchore/stereoscope/pkg/image"
 	"github.com/anchore/syft/syft"
 	"github.com/anchore/syft/syft/artifact"
@@ -16,41 +17,43 @@ import (
 	"strings"
 )
 
-func AnalyzeImages(images []string) (*ContainerResolution, error) {
+func AnalyzeImages(images []files.ImageModel) (*ContainerResolution, error) {
 
 	containerResolution := &ContainerResolution{
 		ContainerImages:   []ContainerImage{},
 		ContainerPackages: []ContainerPackage{},
 	}
 
-	for _, imageName := range images {
-		tmpResolution, err := analyzeImage(imageName)
+	for _, imageModel := range images {
+		tmpResolution, err := analyzeImage(imageModel)
 
 		if err != nil {
-			log.Printf("Could not analyze image: %s", imageName)
+			log.Printf("Could not analyze image: %s", imageModel)
 			continue
 		}
 
 		containerResolution.ContainerImages = append(containerResolution.ContainerImages, tmpResolution.ContainerImages...)
 		containerResolution.ContainerPackages = append(containerResolution.ContainerPackages, tmpResolution.ContainerPackages...)
-
+		log.Printf("Successfully analyzied image: %s", imageModel)
 	}
-
 	return containerResolution, nil
 }
 
-func analyzeImage(imageId string) (*ContainerResolution, error) {
+func analyzeImage(imageModel files.ImageModel) (*ContainerResolution, error) {
 
-	log.Printf("image is %s", imageId)
+	log.Printf("image is %s, origin: %s, file path: %s", imageModel.Name, imageModel.Origin, imageModel.Path)
 
-	imageSource, s := analyzeImageUsingSyft(imageId)
+	imageSource, s, err := analyzeImageUsingSyft(imageModel.Name)
+	if err != nil {
+		return nil, err
+	}
 
-	result := transformSBOMToContainerResolution(s, imageSource, imageId, "some-path/Dockerfile")
+	result := transformSBOMToContainerResolution(*s, imageSource, imageModel.Name, imageModel.Path, imageModel.Origin)
 
 	return &result, nil
 }
 
-func analyzeImageUsingSyft(imageId string) (*source.StereoscopeImageSource, sbom.SBOM) {
+func analyzeImageUsingSyft(imageId string) (*source.StereoscopeImageSource, *sbom.SBOM, error) {
 	platform, err := image.NewPlatform("linux/amd64")
 	if err != nil {
 		panic(err)
@@ -64,12 +67,13 @@ func analyzeImageUsingSyft(imageId string) (*source.StereoscopeImageSource, sbom
 		},
 	)
 	if err != nil {
-		panic(err)
+		log.Printf("Could not pull image: %s. err: %s", imageId, err.Error())
+		return nil, nil, fmt.Errorf("could not pull image. %s", err.Error())
 	}
 
 	s := getSBOM(imageSource)
 
-	return imageSource, s
+	return imageSource, &s, nil
 }
 
 func getSBOM(src source.Source) sbom.SBOM {
@@ -81,7 +85,7 @@ func getSBOM(src source.Source) sbom.SBOM {
 	return *s
 }
 
-func transformSBOMToContainerResolution(sbom sbom.SBOM, imageSource *source.StereoscopeImageSource, imageId, imagePath string) ContainerResolution {
+func transformSBOMToContainerResolution(sbom sbom.SBOM, imageSource *source.StereoscopeImageSource, imageId, imagePath, imageOrigin string) ContainerResolution {
 
 	imageNameAndTag := strings.Split(imageId, ":")
 
@@ -97,13 +101,13 @@ func transformSBOMToContainerResolution(sbom sbom.SBOM, imageSource *source.Ster
 		return result
 	}
 
-	extractImage(sbom, imageSource.ID(), imageId, imagePath, sourceMetadata, imageNameAndTag, &result)
+	extractImage(sbom, imageSource.ID(), imageId, imagePath, imageOrigin, sourceMetadata, imageNameAndTag, &result)
 	extractImagePackages(imageId, imageSource.ID(), sbom, &result)
 
 	return result
 }
 
-func extractImage(s sbom.SBOM, imageHash artifact.ID, imageId string, imagePath string, sourceMetadata source.StereoscopeImageSourceMetadata, imageNameAndTag []string, result *ContainerResolution) {
+func extractImage(s sbom.SBOM, imageHash artifact.ID, imageId, imagePath, imageOrigin string, sourceMetadata source.StereoscopeImageSourceMetadata, imageNameAndTag []string, result *ContainerResolution) {
 
 	history := extractHistory(sourceMetadata)
 	layerIds := extractLayerIds(history)
@@ -115,7 +119,7 @@ func extractImage(s sbom.SBOM, imageHash artifact.ID, imageId string, imagePath 
 		Distribution: s.Artifacts.LinuxDistribution.PrettyName,
 		ImageHash:    string(imageHash),
 		ImageId:      imageId,
-		ImageOrigin:  "user-input",
+		ImageOrigin:  imageOrigin,
 		Layers:       layerIds,
 		History:      history,
 	}
