@@ -59,7 +59,28 @@ func ExtractFiles(scanPath string) (FileImages, error) {
 	return f, err
 }
 
-func SaveObjectToFile(filePath string, obj interface{}) error {
+func isValidFolderPath(path string) bool {
+	fileInfo, err := os.Stat(path)
+	if err != nil {
+		return false
+	}
+	return fileInfo.IsDir()
+}
+
+func getContainerResolutionFullPath(folderPath string) (string, error) {
+	if !isValidFolderPath(folderPath) {
+		return "", fmt.Errorf("invalid folder path: %s", folderPath)
+	}
+	return folderPath + "/containers-resolution.json", nil // Hard-coding the containers resolution filename
+}
+
+func SaveObjectToFile(folderPath string, obj interface{}) error {
+	containerResolutionFullPath, err := getContainerResolutionFullPath(folderPath)
+	if err != nil {
+		fmt.Println("Error getting container resolution full file path:", err)
+		return err
+	}
+	fmt.Println("containers-resolution.json full path:", containerResolutionFullPath)
 
 	resultBytes, err := json.Marshal(obj)
 	if err != nil {
@@ -67,7 +88,7 @@ func SaveObjectToFile(filePath string, obj interface{}) error {
 		return err
 	}
 
-	err = os.WriteFile(filePath, resultBytes, 0644)
+	err = os.WriteFile(containerResolutionFullPath, resultBytes, 0644)
 	if err != nil {
 		fmt.Println("Error writing file:", err)
 		return err
