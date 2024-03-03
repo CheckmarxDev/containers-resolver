@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/Checkmarx-Containers/containers-resolver/pkg/abstraction"
+	"github.com/Checkmarx-Containers/containers-resolver/pkg/containerResolver"
 	"os"
 )
 
