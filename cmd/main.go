@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/Checkmarx-Containers/containers-resolver/pkg/abstraction"
+	"github.com/Checkmarx-Containers/containers-resolver/pkg/containerResolver"
 	"os"
 )
 
@@ -13,7 +13,7 @@ func main() {
 	i := imageReference()
 	i2 := defaultImage2
 
-	abstraction.GetContainerResolution("./app", "result.json", []string{i, i2}, false)
+	containersResolver.Resolve("./app", "containers-resolution.json", []string{i, i2}, false)
 }
 
 func imageReference() string {
