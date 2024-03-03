@@ -13,7 +13,7 @@ func main() {
 	i := imageReference()
 	i2 := defaultImage2
 
-	abstraction.GetContainerResolution("./app", "result.json", []string{i, i2}, false)
+	containersResolver.Resolve("./app", "containers-resolution.json", []string{i, i2}, false)
 }
 
 func imageReference() string {

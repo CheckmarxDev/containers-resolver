@@ -1,4 +1,4 @@
-package abstraction
+package containersResolver
 
 import (
 	"github.com/Checkmarx-Containers/containers-resolver/internal/files"
@@ -6,7 +6,10 @@ import (
 	"log"
 )
 
-func GetContainerResolution(scanPath string, resolutionFilePath string, images []string, isDebug bool) {
+func Resolve(scanPath string, resolutionFilePath string, images []string, isDebug bool) {
+	// Print function params
+	log.Printf("Resolve func parameters: scanPath=%s, resolutionFilePath=%s, images=%s, isDebug=%t", scanPath, resolutionFilePath, images, isDebug)
+
 	//1. extract files
 	filesWithImages := files.ExtractFilesBySuffix(scanPath, []string{"Dockerfile"})
 
@@ -21,6 +24,7 @@ func GetContainerResolution(scanPath string, resolutionFilePath string, images [
 	if err != nil {
 		log.Fatal("Could not analyze images", err)
 	}
+
 	//5. save to resolution file path
 	err = files.SaveObjectToFile(resolutionFilePath, resolutionResult)
 	if err != nil {
