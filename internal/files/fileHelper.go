@@ -3,7 +3,7 @@ package files
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/Checkmarx-Containers/containers-resolver/internal/files/zip"
+	"github.com/Checkmarx-Containers/containers-resolver/internal/zip"
 	"log"
 	"os"
 	"path/filepath"
