@@ -17,17 +17,23 @@ func MergeImages(images, imagesFromFiles []ImageModel) []ImageModel {
 	return removeDuplicates(images)
 }
 
-func ExtractImagesFromFiles(files FileImages) []ImageModel {
+func ExtractImagesFromFiles(files FileImages) ([]ImageModel, error) {
 
 	dockerfileImages, err := extractImagesFromDockerfiles(files.Dockerfile)
+	if err != nil {
+		log.Println("Could not extract images from docker files", err)
+		return nil, err
+	}
+
 	dockerComposeFileImages, err := extractImagesFromDockerComposeFiles(files.DockerCompose)
 	if err != nil {
-		log.Println("Could not extract images from files", err)
+		log.Println("Could not extract images from docker compose files", err)
+		return nil, err
 	}
 
 	imagesFromFiles := MergeImages(dockerfileImages, dockerComposeFileImages)
 
-	return removeDuplicates(imagesFromFiles)
+	return removeDuplicates(imagesFromFiles), nil
 }
 
 func extractImagesFromDockerComposeFiles(filePaths []FilePath) ([]ImageModel, error) {
