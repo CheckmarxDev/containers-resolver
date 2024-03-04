@@ -4,6 +4,7 @@ import (
 	"archive/zip"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -15,17 +16,19 @@ func ExtractZip(zipPath string) (string, error) {
 	extractDir := filepath.Join(filepath.Dir(zipPath), DirToExtractZip)
 	err := os.MkdirAll(extractDir, os.ModePerm)
 	if err != nil {
+		log.Printf("Could not create directory `%s`", extractDir)
 		return "", err
 	}
 
 	zipReader, err := zip.OpenReader(zipPath)
 	if err != nil {
+		log.Printf("Could not create zip reader `%v`", err)
 		return "", err
 	}
 	defer func(zipReader *zip.ReadCloser) {
 		err = zipReader.Close()
 		if err != nil {
-
+			log.Println("error whole closing zip reader", err)
 		}
 	}(zipReader)
 
@@ -39,6 +42,10 @@ func ExtractZip(zipPath string) (string, error) {
 
 	for _, file := range zipReader.File {
 
+		var fileErr error
+		var srcFile io.ReadCloser
+		var destFile *os.File
+
 		if strings.HasPrefix(file.Name, "__MACOSX") {
 			continue
 		}
@@ -46,46 +53,48 @@ func ExtractZip(zipPath string) (string, error) {
 		targetPath := filepath.Join(extractDir, strings.TrimPrefix(file.Name, prefix+string(filepath.Separator)))
 
 		if file.FileInfo().IsDir() {
-			err1 := os.MkdirAll(targetPath, os.ModePerm)
-			if err1 != nil {
-				return "", err1
+			fileErr = os.MkdirAll(targetPath, os.ModePerm)
+			if fileErr != nil {
+				log.Printf("Could not create new directory `%s`", targetPath)
+				return "", fileErr
 			}
 			continue
 		}
 
-		if err := os.MkdirAll(filepath.Dir(targetPath), os.ModePerm); err != nil {
-			return "", err
+		if fileErr = os.MkdirAll(filepath.Dir(targetPath), os.ModePerm); fileErr != nil {
+			return "", fileErr
 		}
 
-		srcFile, err := file.Open()
-		if err != nil {
-			err1 := srcFile.Close()
-			if err1 != nil {
+		srcFile, fileErr = file.Open()
+		if fileErr != nil {
+			fileErr = srcFile.Close()
+			if fileErr != nil {
 				fmt.Println("error")
 			}
-			return "", err
+			return "", fileErr
 		}
 
-		destFile, err1 := os.Create(targetPath)
-		if err1 != nil {
-			err1 = destFile.Close()
-			if err1 != nil {
+		destFile, fileErr = os.Create(targetPath)
+		if fileErr != nil {
+			fileErr = destFile.Close()
+			if fileErr != nil {
 				fmt.Println("error")
 			}
-			return "", err
+			return "", fileErr
 		}
 
-		if _, err := io.Copy(destFile, srcFile); err != nil {
-			return "", err
+		if _, fileErr = io.Copy(destFile, srcFile); fileErr != nil {
+			return "", fileErr
 		}
 
-		err1 = srcFile.Close()
-		if err1 != nil {
-			fmt.Println("error")
+		fileErr = srcFile.Close()
+		if fileErr != nil {
+			fmt.Println("error while closing src file")
 		}
-		err1 = destFile.Close()
-		if err1 != nil {
-			fmt.Println("error")
+		fileErr = destFile.Close()
+		if fileErr != nil {
+			fmt.Println("error while closing dest file")
+
 		}
 
 	}

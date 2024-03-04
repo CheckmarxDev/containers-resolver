@@ -6,9 +6,9 @@ import (
 	"log"
 )
 
-func Resolve(scanPath string, resolutionFolderPath string, images []string, isDebug bool) {
+func Resolve(scanPath string, resolutionFilePath string, images []string, isDebug bool) {
 	// Print function params
-	log.Printf("Resolve func parameters: scanPath=%s, resolutionFolderPath=%s, images=%s, isDebug=%t", scanPath, resolutionFolderPath, images, isDebug)
+	log.Printf("Resolve func parameters: scanPath=%s, resolutionFilePath=%s, images=%s, isDebug=%t", scanPath, resolutionFilePath, images, isDebug)
 
 	//1. extract files
 	filesWithImages, _ := files.ExtractFiles(scanPath)
@@ -26,7 +26,7 @@ func Resolve(scanPath string, resolutionFolderPath string, images []string, isDe
 	}
 
 	//5. save to resolution file path
-	err = files.SaveObjectToFile(resolutionFolderPath, resolutionResult)
+	err = files.SaveObjectToFile(resolutionFilePath, resolutionResult)
 	if err != nil {
 		log.Fatal("Could not save resolution result", err)
 	}
