@@ -34,7 +34,7 @@ func AnalyzeImages(images []files.ImageModel) (*ContainerResolution, error) {
 
 		containerResolution.ContainerImages = append(containerResolution.ContainerImages, tmpResolution.ContainerImages...)
 		containerResolution.ContainerPackages = append(containerResolution.ContainerPackages, tmpResolution.ContainerPackages...)
-		log.Printf("Successfully analyzied image: %s", imageModel)
+		log.Printf("Successfully analyzed image: %s", imageModel)
 	}
 	return containerResolution, nil
 }
