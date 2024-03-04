@@ -59,18 +59,15 @@ func ExtractFiles(scanPath string) (FileImages, error) {
 	return f, err
 }
 
-func isValidFolderPath(path string) bool {
+func IsValidFolderPath(path string) (bool, error) {
 	fileInfo, err := os.Stat(path)
 	if err != nil {
-		return false
+		return false, err
 	}
-	return fileInfo.IsDir()
+	return fileInfo.IsDir(), err
 }
 
 func getContainerResolutionFullPath(folderPath string) (string, error) {
-	if !isValidFolderPath(folderPath) {
-		return "", fmt.Errorf("invalid folder path: %s", folderPath)
-	}
 	return folderPath + "/containers-resolution.json", nil // Hard-coding the containers resolution filename
 }
 
