@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/Checkmarx-Containers/containers-resolver/pkg/containerResolver"
-	"os"
+	"log"
 )
 
 const defaultImage = "alpine:3.14.0"
@@ -10,18 +10,18 @@ const defaultImage2 = "nginx:latest"
 
 func main() {
 
-	i := imageReference()
-	i2 := defaultImage2
-	//containersResolver.Resolve("/Users/danielgreenspan/Desktop/containers-worker.zip", "containers-resolution-compressed-zip.json", []string{i, i2}, false)
-	//containersResolver.Resolve("/Users/danielgreenspan/Desktop/worker.tar.gz", "containers-resolution-compressed-tar.json", []string{i, i2}, false)
+	//scanPath := "./test_files/withDockerInZip.zip"
+	scanPath := "./test_files/withHelmInZip.zip"
+	//scanPath := "./test_files/withDockerInTar.tar.gz"
+	//scanPath := "path-to-local-dir"
 
-	currentPath, _ := os.Getwd() // Get the current working directory (use it as the scan path and resolution folder path)
-	containersResolver.Resolve(currentPath, currentPath, []string{i, i2}, false)
-}
+	//resultPath := "./test_files/zip-results"
+	resultPath := "./test_files/helm-results"
+	//resultPath := "./test_files/tar-results"
+	//resultPath := "./test_files/dir-results"
 
-func imageReference() string {
-	if len(os.Args) > 1 {
-		return os.Args[1]
+	err := containersResolver.Resolve(scanPath, resultPath, []string{defaultImage, defaultImage2}, true)
+	if err != nil {
+		log.Println("Could not resolve containers", err)
 	}
-	return defaultImage
 }

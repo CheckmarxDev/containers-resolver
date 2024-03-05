@@ -1,4 +1,4 @@
-package zip
+package files
 
 import (
 	"archive/zip"
@@ -12,7 +12,7 @@ import (
 
 const DirToExtractZip = "extracted_zip"
 
-func ExtractZip(zipPath string) (string, error) {
+func extractZip(zipPath string) (string, error) {
 	extractDir := filepath.Join(filepath.Dir(zipPath), DirToExtractZip)
 	err := os.MkdirAll(extractDir, os.ModePerm)
 	if err != nil {
