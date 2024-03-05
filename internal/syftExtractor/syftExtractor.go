@@ -86,7 +86,7 @@ func getSBOM(src source.Source) sbom.SBOM {
 	return *s
 }
 
-func transformSBOMToContainerResolution(sbom sbom.SBOM, imageSource *source.StereoscopeImageSource, imageId, imagePath, imageOrigin string) ContainerResolution {
+func transformSBOMToContainerResolution(s sbom.SBOM, imageSource *source.StereoscopeImageSource, imageId, imagePath, imageOrigin string) ContainerResolution {
 
 	imageNameAndTag := strings.Split(imageId, ":")
 
@@ -97,18 +97,20 @@ func transformSBOMToContainerResolution(sbom sbom.SBOM, imageSource *source.Ster
 	var sourceMetadata source.StereoscopeImageSourceMetadata
 	var ok bool
 
-	if sourceMetadata, ok = sbom.Source.Metadata.(source.StereoscopeImageSourceMetadata); !ok {
+	if sourceMetadata, ok = s.Source.Metadata.(source.StereoscopeImageSourceMetadata); !ok {
 		fmt.Println("Value is not StereoscopeImageSourceMetadata - can not analyze")
 		return result
 	}
 
-	extractImage(sbom, imageSource.ID(), imageId, imagePath, imageOrigin, sourceMetadata, imageNameAndTag, &result)
-	extractImagePackages(imageId, imageSource.ID(), sbom, &result)
+	distro := getDistro(s.Artifacts.LinuxDistribution)
+
+	extractImage(distro, imageSource.ID(), imageId, imagePath, imageOrigin, sourceMetadata, imageNameAndTag, &result)
+	extractImagePackages(s.Artifacts.Packages, imageId, imageSource.ID(), distro, &result)
 
 	return result
 }
 
-func extractImage(s sbom.SBOM, imageHash artifact.ID, imageId, imagePath, imageOrigin string, sourceMetadata source.StereoscopeImageSourceMetadata, imageNameAndTag []string, result *ContainerResolution) {
+func extractImage(distro string, imageHash artifact.ID, imageId, imagePath, imageOrigin string, sourceMetadata source.StereoscopeImageSourceMetadata, imageNameAndTag []string, result *ContainerResolution) {
 
 	history := extractHistory(sourceMetadata)
 	layerIds := extractLayerIds(history)
@@ -117,7 +119,7 @@ func extractImage(s sbom.SBOM, imageHash artifact.ID, imageId, imagePath, imageO
 		ImageName:    imageNameAndTag[0],
 		ImageTag:     imageNameAndTag[1],
 		ImagePath:    imagePath,
-		Distribution: getDistro(s.Artifacts.LinuxDistribution),
+		Distribution: distro,
 		ImageHash:    string(imageHash),
 		ImageId:      imageId,
 		ImageOrigin:  imageOrigin,
@@ -128,21 +130,21 @@ func extractImage(s sbom.SBOM, imageHash artifact.ID, imageId, imagePath, imageO
 	result.ContainerImages = append(result.ContainerImages, images)
 }
 
-func extractImagePackages(imageId string, imageHash artifact.ID, s sbom.SBOM, result *ContainerResolution) {
+func extractImagePackages(packages *pkg.Collection, imageId string, imageHash artifact.ID, distro string, result *ContainerResolution) {
 
-	var packages []ContainerPackage
+	var containerPackages []ContainerPackage
 
-	for containerPackage := range s.Artifacts.Packages.Enumerate() {
+	for containerPackage := range packages.Enumerate() {
 
 		sourceName, sourceVersion := getPackageRelationships(containerPackage)
 
-		packages = append(packages, ContainerPackage{
+		containerPackages = append(containerPackages, ContainerPackage{
 			ImageId:       imageId,
 			ImageHash:     string(imageHash),
 			Name:          containerPackage.Name,
 			Version:       containerPackage.Version,
-			Distribution:  getDistro(s.Artifacts.LinuxDistribution),
-			Type:          containerPackage.Type.PackageURLType(),
+			Distribution:  distro,
+			Type:          packageTypeToPackageManager(containerPackage.Type),
 			SourceName:    sourceName,
 			SourceVersion: sourceVersion,
 			Licenses:      extractPackageLicenses(containerPackage),
@@ -150,7 +152,7 @@ func extractImagePackages(imageId string, imageHash artifact.ID, s sbom.SBOM, re
 		})
 	}
 
-	result.ContainerPackages = packages
+	result.ContainerPackages = containerPackages
 }
 
 func getPackageRelationships(containerPackage pkg.Package) (string, string) {
@@ -198,10 +200,10 @@ func getRpmSource(containerPackage pkg.Package, rpmMeta pkg.RpmDBEntry) (string,
 }
 
 func getDistro(release *linux.Release) string {
-	if release == nil {
+	if release == nil || release.ID == "" || release.VersionID == "" {
 		return types.NoFilePath
 	}
-	return release.PrettyName
+	return fmt.Sprintf("%s:%s", release.ID, trimPatchVersion(release.VersionID))
 }
 
 func extractPackageLayerIds(locations file.LocationSet) []string {
@@ -281,4 +283,14 @@ func getSize(layerId string, layers []source.StereoscopeLayerMetadata) int64 {
 		}
 	}
 	return 0
+}
+
+func trimPatchVersion(versionID string) string {
+	re := regexp.MustCompile(`^(\d+\.\d+)`)
+	matches := re.FindStringSubmatch(versionID)
+
+	if len(matches) > 1 {
+		return matches[1]
+	}
+	return versionID
 }
