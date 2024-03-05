@@ -5,48 +5,48 @@ import (
 	"github.com/anchore/syft/syft/pkg"
 )
 
-func packageTypeToPackageManager(packageType pkg.Type) PackageManagerType {
+func packageTypeToPackageManager(packageType pkg.Type) string {
 	switch packageType {
 	case pkg.ApkPkg, pkg.DebPkg, pkg.RpmPkg:
-		return Oval
+		return string(Oval)
 	case pkg.GemPkg:
-		return Ruby
+		return string(Ruby)
 	case pkg.NpmPkg:
-		return Npm
+		return string(Npm)
 	case pkg.PythonPkg:
-		return Python
+		return string(Python)
 	case pkg.PhpComposerPkg:
-		return Php
+		return string(Php)
 	case pkg.JavaPkg:
-		return Maven
+		return string(Maven)
 	case pkg.GoModulePkg:
-		return Go
+		return string(Go)
 	case pkg.DotnetPkg:
-		return Nuget
+		return string(Nuget)
 	case pkg.CocoapodsPkg:
-		return Ios
+		return string(Ios)
 	case pkg.ConanPkg:
-		return Cpp
+		return string(Cpp)
 	case pkg.JenkinsPluginPkg:
-		return JenkinsPlugin
+		return string(JenkinsPlugin)
 	case pkg.AlpmPkg:
-		return Alpm
+		return string(Alpm)
 	case pkg.PortagePkg:
-		return Portage
+		return string(Portage)
 	case pkg.HackagePkg:
-		return Hackage
+		return string(Hackage)
 	case pkg.RustPkg:
-		return Rust
+		return string(Rust)
 	case pkg.KbPkg:
-		return Kb
+		return string(Kb)
 	case pkg.DartPubPkg:
-		return DartPub
+		return string(DartPub)
 	case pkg.Rpkg:
-		return R
+		return string(R)
 	case pkg.UnknownPkg, pkg.BinaryPkg, pkg.ErlangOTPPkg, pkg.GithubActionPkg, pkg.GithubActionWorkflowPkg,
 		pkg.GraalVMNativeImagePkg, pkg.HexPkg, pkg.LinuxKernelPkg, pkg.LinuxKernelModulePkg,
 		pkg.NixPkg, pkg.SwiftPkg, pkg.WordpressPluginPkg:
-		return Unsupported
+		return string(Unsupported)
 	default:
 		panic(fmt.Sprintf("Failed to cast syft package type: %s into SupportedPackageManagerPrefixType", packageType))
 	}

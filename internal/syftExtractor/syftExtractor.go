@@ -144,7 +144,7 @@ func extractImagePackages(packages *pkg.Collection, imageId string, imageHash ar
 			Name:          containerPackage.Name,
 			Version:       containerPackage.Version,
 			Distribution:  distro,
-			Type:          string(packageTypeToPackageManager(containerPackage.Type)),
+			Type:          packageTypeToPackageManager(containerPackage.Type),
 			SourceName:    sourceName,
 			SourceVersion: sourceVersion,
 			Licenses:      extractPackageLicenses(containerPackage),
