@@ -4,11 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/Checkmarx-Containers/containers-resolver/internal/files"
+	"github.com/Checkmarx-Containers/containers-resolver/internal/types"
 	"github.com/anchore/stereoscope/pkg/image"
 	"github.com/anchore/syft/syft"
 	"github.com/anchore/syft/syft/artifact"
 	"github.com/anchore/syft/syft/file"
+	"github.com/anchore/syft/syft/linux"
 	"github.com/anchore/syft/syft/pkg"
 	"github.com/anchore/syft/syft/sbom"
 	"github.com/anchore/syft/syft/source"
@@ -17,7 +18,7 @@ import (
 	"strings"
 )
 
-func AnalyzeImages(images []files.ImageModel) (*ContainerResolution, error) {
+func AnalyzeImages(images []types.ImageModel) (*ContainerResolution, error) {
 
 	containerResolution := &ContainerResolution{
 		ContainerImages:   []ContainerImage{},
@@ -39,7 +40,7 @@ func AnalyzeImages(images []files.ImageModel) (*ContainerResolution, error) {
 	return containerResolution, nil
 }
 
-func analyzeImage(imageModel files.ImageModel) (*ContainerResolution, error) {
+func analyzeImage(imageModel types.ImageModel) (*ContainerResolution, error) {
 
 	log.Printf("image is %s, origin: %s, file path: %s", imageModel.Name, imageModel.Origin, imageModel.Path)
 
@@ -116,7 +117,7 @@ func extractImage(s sbom.SBOM, imageHash artifact.ID, imageId, imagePath, imageO
 		ImageName:    imageNameAndTag[0],
 		ImageTag:     imageNameAndTag[1],
 		ImagePath:    imagePath,
-		Distribution: s.Artifacts.LinuxDistribution.PrettyName,
+		Distribution: getDistro(s.Artifacts.LinuxDistribution),
 		ImageHash:    string(imageHash),
 		ImageId:      imageId,
 		ImageOrigin:  imageOrigin,
@@ -137,7 +138,7 @@ func extractImagePackages(imageId string, imageHash artifact.ID, s sbom.SBOM, re
 			ImageHash:     string(imageHash),
 			Name:          containerPackage.Name,
 			Version:       containerPackage.Version,
-			Distribution:  s.Artifacts.LinuxDistribution.PrettyName,
+			Distribution:  getDistro(s.Artifacts.LinuxDistribution),
 			Type:          containerPackage.Type.PackageURLType(),
 			SourceName:    "",
 			SourceVersion: "",
@@ -147,6 +148,13 @@ func extractImagePackages(imageId string, imageHash artifact.ID, s sbom.SBOM, re
 	}
 
 	result.ContainerPackages = packages
+}
+
+func getDistro(release *linux.Release) string {
+	if release == nil {
+		return types.NoFilePath
+	}
+	return release.PrettyName
 }
 
 func extractPackageLayerIds(locations file.LocationSet) []string {

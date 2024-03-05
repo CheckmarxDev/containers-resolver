@@ -1,4 +1,4 @@
-package zip
+package files
 
 import (
 	"archive/tar"
@@ -12,7 +12,7 @@ import (
 
 const DirToExtractTar = "extracted_tar"
 
-func ExtractTar(tarPath string) (string, error) {
+func extractTar(tarPath string) (string, error) {
 	r, err := os.Open(tarPath)
 	if err != nil {
 		fmt.Println("error")
