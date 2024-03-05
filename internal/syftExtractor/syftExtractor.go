@@ -133,6 +133,9 @@ func extractImagePackages(imageId string, imageHash artifact.ID, s sbom.SBOM, re
 	var packages []ContainerPackage
 
 	for containerPackage := range s.Artifacts.Packages.Enumerate() {
+
+		sourceName, sourceVersion := getPackageRelationships(containerPackage)
+
 		packages = append(packages, ContainerPackage{
 			ImageId:       imageId,
 			ImageHash:     string(imageHash),
@@ -140,14 +143,58 @@ func extractImagePackages(imageId string, imageHash artifact.ID, s sbom.SBOM, re
 			Version:       containerPackage.Version,
 			Distribution:  getDistro(s.Artifacts.LinuxDistribution),
 			Type:          containerPackage.Type.PackageURLType(),
-			SourceName:    "",
-			SourceVersion: "",
+			SourceName:    sourceName,
+			SourceVersion: sourceVersion,
 			Licenses:      extractPackageLicenses(containerPackage),
 			LayerIds:      extractPackageLayerIds(containerPackage.Locations),
 		})
 	}
 
 	result.ContainerPackages = packages
+}
+
+func getPackageRelationships(containerPackage pkg.Package) (string, string) {
+
+	if apkMeta, ok := containerPackage.Metadata.(pkg.ApkDBEntry); ok {
+		return getApkSource(containerPackage, apkMeta)
+	}
+	if debMeta, ok := containerPackage.Metadata.(pkg.DpkgDBEntry); ok {
+		return getDebSource(containerPackage, debMeta)
+	}
+	if rpmMeta, ok := containerPackage.Metadata.(pkg.RpmDBEntry); ok {
+		return getRpmSource(containerPackage, rpmMeta)
+	}
+	return "", ""
+}
+
+func getApkSource(containerPackage pkg.Package, apkMeta pkg.ApkDBEntry) (string, string) {
+	if apkMeta.OriginPackage == "" || apkMeta.OriginPackage == containerPackage.Name {
+		return "", ""
+	}
+	if apkMeta.Version == "" {
+		return apkMeta.OriginPackage, containerPackage.Version
+	}
+	return apkMeta.OriginPackage, apkMeta.Version
+}
+
+func getDebSource(containerPackage pkg.Package, debMeta pkg.DpkgDBEntry) (string, string) {
+	if debMeta.Source == "" || debMeta.Source == containerPackage.Name {
+		return "", ""
+	}
+	if debMeta.SourceVersion == "" {
+		return debMeta.Source, containerPackage.Version
+	}
+	return debMeta.Source, debMeta.SourceVersion
+}
+
+func getRpmSource(containerPackage pkg.Package, rpmMeta pkg.RpmDBEntry) (string, string) {
+	if rpmMeta.SourceRpm == "" || rpmMeta.SourceRpm == containerPackage.Name {
+		return "", ""
+	}
+	if rpmMeta.SourceRpm == "" {
+		return rpmMeta.SourceRpm, containerPackage.Version
+	}
+	return rpmMeta.SourceRpm, rpmMeta.Version
 }
 
 func getDistro(release *linux.Release) string {
