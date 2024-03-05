@@ -18,7 +18,7 @@ func ExtractImagesFromDockerfiles(logger *logger.Logger, filePaths []types.FileP
 
 		fileImages, err := extractImagesFromDockerfile(logger, filePath)
 		if err != nil {
-			logger.Warn("could not extract images from dockerfile %s", filePath, err)
+			logger.Warn("could not extract images from dockerfile %s err: %+v", filePath, err)
 		}
 		printFoundImagesInFile(logger, filePath.RelativePath, fileImages)
 		imageNames = append(imageNames, fileImages...)
@@ -37,7 +37,7 @@ func extractImagesFromDockerfile(l *logger.Logger, filePath types.FilePath) ([]t
 	defer func(file *os.File) {
 		err = file.Close()
 		if err != nil {
-			l.Warn("Could not close dockerfile:", file.Name())
+			l.Warn("Could not close dockerfile: %s err: %+v", file.Name(), err)
 		}
 	}(file)
 

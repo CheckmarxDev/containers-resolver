@@ -16,7 +16,7 @@ func ExtractImagesFromDockerComposeFiles(logger *logger.Logger, filePaths []type
 		logger.Debug("going to extract images from docker compose file %s", filePath)
 		fileImages, err := extractImagesFromDockerComposeFile(logger, filePath)
 		if err != nil {
-			logger.Warn("could not extract images from docker compose file %s", filePath, err)
+			logger.Warn("could not extract images from docker compose file %s err: %+v", filePath, err)
 		}
 		printFoundImagesInFile(logger, filePath.RelativePath, fileImages)
 		imageNames = append(imageNames, fileImages...)
@@ -35,7 +35,7 @@ func extractImagesFromDockerComposeFile(l *logger.Logger, filePath types.FilePat
 	defer func(file *os.File) {
 		err = file.Close()
 		if err != nil {
-			l.Warn("Could not close docker compose file:", file.Name())
+			l.Warn("Could not close docker compose file: %s err: %+v", file.Name(), err)
 		}
 	}(file)
 

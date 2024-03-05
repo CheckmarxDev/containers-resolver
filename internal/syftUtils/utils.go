@@ -47,13 +47,13 @@ func analyzeImageUsingSyft(l *logger.Logger, imageId string) (*source.Stereoscop
 		},
 	)
 	if err != nil {
-		l.Error("Could not pull image: %s.", imageId, err)
+		l.Error("Could not pull image: %s. err: %+v", imageId, err)
 		return nil, nil, err
 	}
 
 	s, err := getSBOM(imageSource)
 	if err != nil {
-		l.Error("Could get image SBOM. image: %s.", imageId, err)
+		l.Error("Could get image SBOM. image: %s. err: %+v", imageId, err)
 		return nil, nil, err
 	}
 	return imageSource, &s, nil

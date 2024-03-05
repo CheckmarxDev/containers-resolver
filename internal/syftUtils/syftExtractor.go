@@ -21,7 +21,7 @@ func (se *SyftExtractor) AnalyzeImages(images []types.ImageModel) (*ContainerRes
 
 		tmpResolution, err := analyzeImage(se.Logger, imageModel)
 		if err != nil {
-			se.Error("Could not analyze image: %s", imageModel.Name, err)
+			se.Error("Could not analyze image: %s err: %+v", imageModel.Name, err)
 			continue
 		}
 

@@ -21,13 +21,13 @@ func ExtractImagesFromHelmFiles(logger *logger.Logger, helmCharts []types.HelmCh
 
 		renderedTemplates, err := generateRenderedTemplates(h)
 		if err != nil {
-			logger.Error("Could not render templates from helm directory %s", h.Directory, err)
+			logger.Error("Could not render templates from helm directory %s err: %+v", h.Directory, err)
 			continue
 		}
 
 		images, err := extractImageInfo(renderedTemplates)
 		if err != nil {
-			logger.Error("Could not extract images from helm directory %s", h.Directory, err)
+			logger.Error("Could not extract images from helm directory %s err: %+v", h.Directory, err)
 			continue
 		}
 
