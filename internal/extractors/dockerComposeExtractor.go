@@ -3,28 +3,29 @@ package extractors
 import (
 	"bufio"
 	"fmt"
+	"github.com/Checkmarx-Containers/containers-resolver/internal/logger"
 	"github.com/Checkmarx-Containers/containers-resolver/internal/types"
-	"log"
 	"os"
 	"regexp"
 )
 
-func ExtractImagesFromDockerComposeFiles(filePaths []types.FilePath) ([]types.ImageModel, error) {
+func ExtractImagesFromDockerComposeFiles(logger *logger.Logger, filePaths []types.FilePath) ([]types.ImageModel, error) {
 	var imageNames []types.ImageModel
 
 	for _, filePath := range filePaths {
-		fileImages, err := extractImagesFromDockerComposeFile(filePath)
+		logger.Debug("going to extract images from docker compose file %s", filePath)
+		fileImages, err := extractImagesFromDockerComposeFile(logger, filePath)
 		if err != nil {
-			return nil, err
+			logger.Warn("could not extract images from docker compose file %s", filePath, err)
 		}
-
+		printFoundImagesInFile(logger, filePath.RelativePath, fileImages)
 		imageNames = append(imageNames, fileImages...)
 	}
 
 	return imageNames, nil
 }
 
-func extractImagesFromDockerComposeFile(filePath types.FilePath) ([]types.ImageModel, error) {
+func extractImagesFromDockerComposeFile(l *logger.Logger, filePath types.FilePath) ([]types.ImageModel, error) {
 	var imageNames []types.ImageModel
 
 	file, err := os.Open(filePath.FullPath)
@@ -32,9 +33,9 @@ func extractImagesFromDockerComposeFile(filePath types.FilePath) ([]types.ImageM
 		return nil, err
 	}
 	defer func(file *os.File) {
-		err := file.Close()
+		err = file.Close()
 		if err != nil {
-			log.Println("Could not close docker compose file:", file.Name())
+			l.Warn("Could not close docker compose file:", file.Name())
 		}
 	}(file)
 
@@ -60,11 +61,9 @@ func extractImagesFromDockerComposeFile(filePath types.FilePath) ([]types.ImageM
 		}
 	}
 
-	if err := scanner.Err(); err != nil {
+	if err = scanner.Err(); err != nil {
 		return nil, err
 	}
-
-	printFoundImagesInFile(filePath.RelativePath, imageNames)
 
 	return imageNames, nil
 }

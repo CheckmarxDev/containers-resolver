@@ -1,9 +1,10 @@
-package syftExtractor
+package syftUtils
 
 import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/Checkmarx-Containers/containers-resolver/internal/logger"
 	"github.com/Checkmarx-Containers/containers-resolver/internal/types"
 	"github.com/anchore/stereoscope/pkg/image"
 	"github.com/anchore/syft/syft"
@@ -13,51 +14,29 @@ import (
 	"github.com/anchore/syft/syft/pkg"
 	"github.com/anchore/syft/syft/sbom"
 	"github.com/anchore/syft/syft/source"
-	"log"
 	"regexp"
 	"strings"
 )
 
-func AnalyzeImages(images []types.ImageModel) (*ContainerResolution, error) {
+func analyzeImage(l *logger.Logger, imageModel types.ImageModel) (*ContainerResolution, error) {
 
-	containerResolution := &ContainerResolution{
-		ContainerImages:   []ContainerImage{},
-		ContainerPackages: []ContainerPackage{},
-	}
+	l.Debug("image is %s, origin: %s, file path: %s", imageModel.Name, imageModel.Origin, imageModel.Path)
 
-	for _, imageModel := range images {
-		tmpResolution, err := analyzeImage(imageModel)
-
-		if err != nil {
-			log.Printf("Could not analyze image: %s", imageModel)
-			continue
-		}
-
-		containerResolution.ContainerImages = append(containerResolution.ContainerImages, tmpResolution.ContainerImages...)
-		containerResolution.ContainerPackages = append(containerResolution.ContainerPackages, tmpResolution.ContainerPackages...)
-		log.Printf("Successfully analyzed image: %s", imageModel)
-	}
-	return containerResolution, nil
-}
-
-func analyzeImage(imageModel types.ImageModel) (*ContainerResolution, error) {
-
-	log.Printf("image is %s, origin: %s, file path: %s", imageModel.Name, imageModel.Origin, imageModel.Path)
-
-	imageSource, s, err := analyzeImageUsingSyft(imageModel.Name)
+	imageSource, s, err := analyzeImageUsingSyft(l, imageModel.Name)
 	if err != nil {
 		return nil, err
 	}
 
-	result := transformSBOMToContainerResolution(*s, imageSource, imageModel.Name, imageModel.Path, imageModel.Origin)
+	result := transformSBOMToContainerResolution(l, *s, imageSource, imageModel.Name, imageModel.Path, imageModel.Origin)
 
 	return &result, nil
 }
 
-func analyzeImageUsingSyft(imageId string) (*source.StereoscopeImageSource, *sbom.SBOM, error) {
+func analyzeImageUsingSyft(l *logger.Logger, imageId string) (*source.StereoscopeImageSource, *sbom.SBOM, error) {
 	platform, err := image.NewPlatform("linux/amd64")
 	if err != nil {
-		panic(err)
+		l.Error("could not create platform object", err)
+		return nil, nil, err
 	}
 
 	imageSource, err := source.NewFromStereoscopeImage(
@@ -68,25 +47,28 @@ func analyzeImageUsingSyft(imageId string) (*source.StereoscopeImageSource, *sbo
 		},
 	)
 	if err != nil {
-		log.Printf("Could not pull image: %s. err: %s", imageId, err.Error())
-		return nil, nil, fmt.Errorf("could not pull image. %s", err.Error())
+		l.Error("Could not pull image: %s.", imageId, err)
+		return nil, nil, err
 	}
 
-	s := getSBOM(imageSource)
-
+	s, err := getSBOM(imageSource)
+	if err != nil {
+		l.Error("Could get image SBOM. image: %s.", imageId, err)
+		return nil, nil, err
+	}
 	return imageSource, &s, nil
 }
 
-func getSBOM(src source.Source) sbom.SBOM {
+func getSBOM(src source.Source) (sbom.SBOM, error) {
 	s, err := syft.CreateSBOM(context.Background(), src, nil)
 	if err != nil {
-		panic(err)
+		return sbom.SBOM{}, err
 	}
 
-	return *s
+	return *s, nil
 }
 
-func transformSBOMToContainerResolution(s sbom.SBOM, imageSource *source.StereoscopeImageSource, imageId, imagePath, imageOrigin string) ContainerResolution {
+func transformSBOMToContainerResolution(l *logger.Logger, s sbom.SBOM, imageSource *source.StereoscopeImageSource, imageId, imagePath, imageOrigin string) ContainerResolution {
 
 	imageNameAndTag := strings.Split(imageId, ":")
 
@@ -98,7 +80,7 @@ func transformSBOMToContainerResolution(s sbom.SBOM, imageSource *source.Stereos
 	var ok bool
 
 	if sourceMetadata, ok = s.Source.Metadata.(source.StereoscopeImageSourceMetadata); !ok {
-		fmt.Println("Value is not StereoscopeImageSourceMetadata - can not analyze")
+		l.Warn("Value is not StereoscopeImageSourceMetadata - can not analyze")
 		return result
 	}
 

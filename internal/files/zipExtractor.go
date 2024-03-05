@@ -2,9 +2,8 @@ package files
 
 import (
 	"archive/zip"
-	"fmt"
+	"github.com/Checkmarx-Containers/containers-resolver/internal/logger"
 	"io"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -12,23 +11,24 @@ import (
 
 const DirToExtractZip = "extracted_zip"
 
-func extractZip(zipPath string) (string, error) {
+func extractZip(l *logger.Logger, zipPath string) (string, error) {
 	extractDir := filepath.Join(filepath.Dir(zipPath), DirToExtractZip)
 	err := os.MkdirAll(extractDir, os.ModePerm)
 	if err != nil {
-		log.Printf("Could not create directory `%s`", extractDir)
+		l.Error("Could not create directory `%s`", extractDir, err)
 		return "", err
 	}
 
 	zipReader, err := zip.OpenReader(zipPath)
 	if err != nil {
-		log.Printf("Could not create zip reader `%v`", err)
+		l.Error("Could not create zip reader `%v`", err)
+
 		return "", err
 	}
 	defer func(zipReader *zip.ReadCloser) {
 		err = zipReader.Close()
 		if err != nil {
-			log.Println("error whole closing zip reader", err)
+			l.Warn("error whole closing zip reader", err)
 		}
 	}(zipReader)
 
@@ -55,21 +55,17 @@ func extractZip(zipPath string) (string, error) {
 		if file.FileInfo().IsDir() {
 			fileErr = os.MkdirAll(targetPath, os.ModePerm)
 			if fileErr != nil {
-				log.Printf("Could not create new directory `%s`", targetPath)
+				l.Error("Could not create new directory `%s`", targetPath, err)
 				return "", fileErr
 			}
 			continue
-		}
-
-		if fileErr = os.MkdirAll(filepath.Dir(targetPath), os.ModePerm); fileErr != nil {
-			return "", fileErr
 		}
 
 		srcFile, fileErr = file.Open()
 		if fileErr != nil {
 			fileErr = srcFile.Close()
 			if fileErr != nil {
-				fmt.Println("error")
+				l.Warn("Could not close src file `%s`", srcFile, err)
 			}
 			return "", fileErr
 		}
@@ -78,26 +74,26 @@ func extractZip(zipPath string) (string, error) {
 		if fileErr != nil {
 			fileErr = destFile.Close()
 			if fileErr != nil {
-				fmt.Println("error")
+				l.Warn("Could not close dest file `%s`", destFile, err)
 			}
 			return "", fileErr
 		}
 
 		if _, fileErr = io.Copy(destFile, srcFile); fileErr != nil {
+			l.Error("Could not close dest file `%s`", destFile, err)
 			return "", fileErr
 		}
 
 		fileErr = srcFile.Close()
 		if fileErr != nil {
-			fmt.Println("error while closing src file")
+			l.Warn("error while closing src file", err)
 		}
 		fileErr = destFile.Close()
 		if fileErr != nil {
-			fmt.Println("error while closing dest file")
-
+			l.Warn("error while closing dest file", err)
 		}
 
 	}
-
+	l.Debug("Successfully extracts zip folder to: %s", extractDir)
 	return extractDir, nil
 }
