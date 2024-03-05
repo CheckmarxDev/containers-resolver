@@ -1,4 +1,4 @@
-package syftExtractor
+package syftUtils
 
 import (
 	"fmt"

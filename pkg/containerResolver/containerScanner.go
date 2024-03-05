@@ -2,46 +2,62 @@ package containersResolver
 
 import (
 	"github.com/Checkmarx-Containers/containers-resolver/internal/files"
-	"github.com/Checkmarx-Containers/containers-resolver/internal/syftExtractor"
+	"github.com/Checkmarx-Containers/containers-resolver/internal/logger"
+	"github.com/Checkmarx-Containers/containers-resolver/internal/syftUtils"
 	"github.com/Checkmarx-Containers/containers-resolver/internal/types"
-	"log"
 )
 
 func Resolve(scanPath string, resolutionFolderPath string, images []string, isDebug bool) error {
-	log.Printf("Resolve func parameters: scanPath=%s, resolutionFolderPath=%s, images=%s, isDebug=%t", scanPath, resolutionFolderPath, images, isDebug)
+
+	resolverLogger := logger.NewLogger(isDebug)
+
+	imagesExtractor := files.ImagesExtractor{
+		Logger: resolverLogger,
+	}
+
+	syftExtractor := syftUtils.SyftExtractor{
+		Logger: resolverLogger,
+	}
+	resolverLogger.Debug("Resolve func parameters: scanPath=%s, resolutionFolderPath=%s, images=%s, isDebug=%t", scanPath, resolutionFolderPath, images, isDebug)
+
+	// 0. validate input
 	err := validate(resolutionFolderPath)
+	if err != nil {
+		resolverLogger.Error("input is not valid. err: %+v", err)
+		return err
+	}
 
 	//1. extract files
-	filesWithImages, outputPath, err := files.ExtractFiles(scanPath)
+	filesWithImages, outputPath, err := imagesExtractor.ExtractFiles(scanPath)
 	if err != nil {
-		log.Fatal("Could not extract files", err)
+		resolverLogger.Error("Could not extract files err: %+v", err)
 		return err
 	}
 
 	//2. extract images from files
-	imagesToAnalyze, err := files.ExtractAndMergeImagesFromFiles(filesWithImages, toImageModels(images))
+	imagesToAnalyze, err := imagesExtractor.ExtractAndMergeImagesFromFiles(filesWithImages, toImageModels(images))
 	if err != nil {
-		log.Fatal("Could not extract images from files", err)
+		resolverLogger.Error("Could not extract images from files err: %+v", err)
 		return err
 	}
 
 	//4. get images resolution
 	resolutionResult, err := syftExtractor.AnalyzeImages(imagesToAnalyze)
 	if err != nil {
-		log.Fatal("Could not analyze images", err)
+		resolverLogger.Error("Could not analyze images err: %+v", err)
 		return err
 	}
 
 	//5. save to resolution file path
-	err = files.SaveObjectToFile(resolutionFolderPath, resolutionResult)
+	err = imagesExtractor.SaveObjectToFile(resolutionFolderPath, resolutionResult)
 	if err != nil {
-		log.Fatal("Could not save resolution result", err)
+		resolverLogger.Error("Could not save resolution result err: %+v", err)
 		return err
 	}
 	//6. cleanup files generated folder
 	err = cleanup(resolutionFolderPath, outputPath)
 	if err != nil {
-		log.Fatal("Could not cleanup resources", err)
+		resolverLogger.Error("Could not cleanup resources err: %+v", err)
 		return err
 	}
 	return nil
@@ -50,7 +66,6 @@ func Resolve(scanPath string, resolutionFolderPath string, images []string, isDe
 func validate(resolutionFolderPath string) error {
 	isValidFolderPath, err := files.IsValidFolderPath(resolutionFolderPath)
 	if err != nil || isValidFolderPath == false {
-		log.Fatal("resolutionFolderPath is not a valid path.", err)
 		return err
 	}
 	return nil

@@ -4,15 +4,15 @@ import (
 	"archive/tar"
 	"compress/gzip"
 	"fmt"
+	"github.com/Checkmarx-Containers/containers-resolver/internal/logger"
 	"io"
-	"log"
 	"os"
 	"path/filepath"
 )
 
 const DirToExtractTar = "extracted_tar"
 
-func extractTar(tarPath string) (string, error) {
+func extractTar(l *logger.Logger, tarPath string) (string, error) {
 	r, err := os.Open(tarPath)
 	if err != nil {
 		fmt.Println("error")
@@ -21,19 +21,19 @@ func extractTar(tarPath string) (string, error) {
 	extractDir := filepath.Join(filepath.Dir(tarPath), DirToExtractTar)
 	err = os.MkdirAll(extractDir, os.ModePerm)
 	if err != nil {
-		log.Printf("Could not create directory `%s`", extractDir)
+		l.Error("Could not create directory `%s`", extractDir, err)
 		return "", err
 	}
 
 	gzr, err := gzip.NewReader(r)
 	if err != nil {
-		log.Printf("Could not create gzip reader `%s`", extractDir)
+		l.Error("Could not create gzip reader `%s`", extractDir, err)
 		return "", err
 	}
 	defer func(gzr *gzip.Reader) {
 		err = gzr.Close()
 		if err != nil {
-			log.Println("error whole closing gzip reader", err)
+			l.Warn("error whole closing gzip reader", err)
 		}
 	}(gzr)
 
@@ -47,7 +47,7 @@ func extractTar(tarPath string) (string, error) {
 			return extractDir, nil
 
 		case headerErr != nil:
-			log.Println("could not get next header", headerErr)
+			l.Error("could not get next header. error: ", headerErr)
 			return "", headerErr
 
 		case header == nil:
@@ -61,7 +61,7 @@ func extractTar(tarPath string) (string, error) {
 		case tar.TypeDir:
 			if _, dirFileErr := os.Stat(target); dirFileErr != nil {
 				if dirFileErr = os.MkdirAll(target, 0755); dirFileErr != nil {
-					log.Printf("could not create dir: %s, err: %v", target, dirFileErr)
+					l.Error("could not create dir: %s, err: %v", target, dirFileErr)
 					return "", dirFileErr
 				}
 			}
@@ -69,18 +69,18 @@ func extractTar(tarPath string) (string, error) {
 		case tar.TypeReg:
 			f, regFileErr := os.OpenFile(target, os.O_CREATE|os.O_RDWR, os.FileMode(header.Mode))
 			if regFileErr != nil {
-				log.Printf("could not open file: %s, err: %v", target, regFileErr)
+				l.Error("could not open file: %s, err: %v", target, regFileErr)
 				return "", regFileErr
 			}
 
 			if _, regFileErr = io.Copy(f, tr); regFileErr != nil {
-				log.Printf("could not copy file: %s, err: %v", f.Name(), regFileErr)
+				l.Error("could not copy file: %s, err: %v", f.Name(), regFileErr)
 				return "", regFileErr
 			}
 
 			regFileErr = f.Close()
 			if regFileErr != nil {
-				log.Println("error whole closing file", f.Name(), regFileErr)
+				l.Warn("error whole closing file %s", f.Name(), regFileErr)
 				return "", regFileErr
 			}
 		}

@@ -2,36 +2,50 @@ package extractors
 
 import (
 	"fmt"
+	"github.com/Checkmarx-Containers/containers-resolver/internal/logger"
 	"github.com/Checkmarx-Containers/containers-resolver/internal/types"
 	"gopkg.in/yaml.v2"
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart/loader"
-	"log"
 	"regexp"
 
 	"path/filepath"
 	"strings"
 )
 
-func ExtractImagesFromHelmFiles(helmCharts []types.HelmChartInfo) ([]types.ImageModel, error) {
+func ExtractImagesFromHelmFiles(logger *logger.Logger, helmCharts []types.HelmChartInfo) ([]types.ImageModel, error) {
 
 	var imagesFromHelmDirectories []types.ImageModel
 	for _, h := range helmCharts {
+		logger.Debug("going to extract images from helm directory %s", h.Directory)
+
 		renderedTemplates, err := generateRenderedTemplates(h)
 		if err != nil {
-			log.Println("Could not get images from helm dir", h.Directory)
+			logger.Error("Could not render templates from helm directory %s err: %+v", h.Directory, err)
+			continue
 		}
 
 		images, err := extractImageInfo(renderedTemplates)
 		if err != nil {
-			return nil, err
+			logger.Error("Could not extract images from helm directory %s err: %+v", h.Directory, err)
+			continue
 		}
 
-		log.Printf("Found images in helm directory: %s, images: %v", h.Directory, images)
+		printFoundImages(logger, h, images)
 		imagesFromHelmDirectories = append(imagesFromHelmDirectories, images...)
 	}
 
 	return imagesFromHelmDirectories, nil
+}
+
+func printFoundImages(logger *logger.Logger, h types.HelmChartInfo, images []types.ImageModel) {
+	logger.Debug("Found images in helm directory: %s, images: %v", h.Directory, strings.Join(func() []string {
+		var result []string
+		for _, obj := range images {
+			result = append(result, obj.Name)
+		}
+		return result
+	}(), ", "))
 }
 
 func generateRenderedTemplates(c types.HelmChartInfo) (string, error) {
