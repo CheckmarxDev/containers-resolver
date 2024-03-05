@@ -3,6 +3,7 @@ package containersResolver
 import (
 	"github.com/Checkmarx-Containers/containers-resolver/internal/files"
 	"github.com/Checkmarx-Containers/containers-resolver/internal/syftExtractor"
+	"github.com/Checkmarx-Containers/containers-resolver/internal/types"
 	"log"
 )
 
@@ -18,14 +19,14 @@ func Resolve(scanPath string, resolutionFolderPath string, images []string, isDe
 	}
 
 	//2. extract images from files
-	imagesFromFiles, err := files.ExtractImagesFromFiles(filesWithImages)
+	imagesToAnalyze, err := files.ExtractAndMergeImagesFromFiles(filesWithImages, toImageModels(images))
 	if err != nil {
 		log.Fatal("Could not extract images from files", err)
 		return err
 	}
 
 	//4. get images resolution
-	resolutionResult, err := syftExtractor.AnalyzeImages(imagesFromFiles)
+	resolutionResult, err := syftExtractor.AnalyzeImages(imagesToAnalyze)
 	if err != nil {
 		log.Fatal("Could not analyze images", err)
 		return err
@@ -63,4 +64,18 @@ func cleanup(originalPath string, outputPath string) error {
 		}
 	}
 	return nil
+}
+
+func toImageModels(images []string) []types.ImageModel {
+	var imageNames []types.ImageModel
+
+	for _, image := range images {
+		imageNames = append(imageNames, types.ImageModel{
+			Name:   image,
+			Origin: types.UserInput,
+			Path:   types.NoFilePath,
+		})
+	}
+
+	return imageNames
 }

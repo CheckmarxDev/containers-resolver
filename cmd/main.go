@@ -5,7 +5,7 @@ import (
 	"log"
 )
 
-const defaultImage = "alpine:3.14.0"
+const defaultImage = "debian:12"
 const defaultImage2 = "nginx:latest"
 
 func main() {

@@ -6,17 +6,7 @@ import (
 	"log"
 )
 
-func MergeImages(images, imagesFromFiles, helmImages []types.ImageModel) []types.ImageModel {
-	if len(imagesFromFiles) > 0 {
-		images = append(images, imagesFromFiles...)
-	}
-	if len(helmImages) > 0 {
-		images = append(images, helmImages...)
-	}
-	return removeDuplicates(images)
-}
-
-func ExtractImagesFromFiles(files types.FileImages) ([]types.ImageModel, error) {
+func ExtractAndMergeImagesFromFiles(files types.FileImages, images []types.ImageModel) ([]types.ImageModel, error) {
 
 	dockerfileImages, err := extractors.ExtractImagesFromDockerfiles(files.Dockerfile)
 	if err != nil {
@@ -36,9 +26,22 @@ func ExtractImagesFromFiles(files types.FileImages) ([]types.ImageModel, error) 
 		return nil, err
 	}
 
-	imagesFromFiles := MergeImages(dockerfileImages, dockerComposeFileImages, helmImages)
+	imagesFromFiles := mergeImages(images, dockerfileImages, dockerComposeFileImages, helmImages)
 
 	return imagesFromFiles, nil
+}
+
+func mergeImages(images, imagesFromDockerFiles, imagesFromDockerComposeFiles, helmImages []types.ImageModel) []types.ImageModel {
+	if len(imagesFromDockerFiles) > 0 {
+		images = append(images, imagesFromDockerFiles...)
+	}
+	if len(imagesFromDockerComposeFiles) > 0 {
+		images = append(images, imagesFromDockerComposeFiles...)
+	}
+	if len(helmImages) > 0 {
+		images = append(images, helmImages...)
+	}
+	return removeDuplicates(images)
 }
 
 func removeDuplicates(slice []types.ImageModel) []types.ImageModel {
