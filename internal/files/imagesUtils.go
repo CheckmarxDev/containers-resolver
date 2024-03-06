@@ -1,7 +1,7 @@
 package files
 
 import (
-	"github.com/Checkmarx-Containers/containers-resolver/internal/types"
+	"github.com/CheckmarxDev/containers-resolver/internal/types"
 )
 
 func mergeImages(images, imagesFromDockerFiles, imagesFromDockerComposeFiles, helmImages []types.ImageModel) []types.ImageModel {

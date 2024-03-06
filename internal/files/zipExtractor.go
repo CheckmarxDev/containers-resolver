@@ -2,7 +2,7 @@ package files
 
 import (
 	"archive/zip"
-	"github.com/Checkmarx-Containers/containers-resolver/internal/logger"
+	"github.com/CheckmarxDev/containers-resolver/internal/logger"
 	"io"
 	"os"
 	"path/filepath"

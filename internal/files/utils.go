@@ -2,8 +2,8 @@ package files
 
 import (
 	"fmt"
-	"github.com/Checkmarx-Containers/containers-resolver/internal/logger"
-	"github.com/Checkmarx-Containers/containers-resolver/internal/types"
+	"github.com/CheckmarxDev/containers-resolver/internal/logger"
+	"github.com/CheckmarxDev/containers-resolver/internal/types"
 	"os"
 	"path/filepath"
 	"regexp"
