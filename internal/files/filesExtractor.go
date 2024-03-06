@@ -2,9 +2,9 @@ package files
 
 import (
 	"encoding/json"
-	"github.com/Checkmarx-Containers/containers-resolver/internal/extractors"
-	"github.com/Checkmarx-Containers/containers-resolver/internal/logger"
-	"github.com/Checkmarx-Containers/containers-resolver/internal/types"
+	"github.com/CheckmarxDev/containers-resolver/internal/extractors"
+	"github.com/CheckmarxDev/containers-resolver/internal/logger"
+	"github.com/CheckmarxDev/containers-resolver/internal/types"
 	"os"
 	"path/filepath"
 )

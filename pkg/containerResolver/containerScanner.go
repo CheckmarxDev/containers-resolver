@@ -1,10 +1,10 @@
 package containersResolver
 
 import (
-	"github.com/Checkmarx-Containers/containers-resolver/internal/files"
-	"github.com/Checkmarx-Containers/containers-resolver/internal/logger"
-	"github.com/Checkmarx-Containers/containers-resolver/internal/syftUtils"
-	"github.com/Checkmarx-Containers/containers-resolver/internal/types"
+	"github.com/CheckmarxDev/containers-resolver/internal/files"
+	"github.com/CheckmarxDev/containers-resolver/internal/logger"
+	"github.com/CheckmarxDev/containers-resolver/internal/syftUtils"
+	"github.com/CheckmarxDev/containers-resolver/internal/types"
 )
 
 func Resolve(scanPath string, resolutionFolderPath string, images []string, isDebug bool) error {

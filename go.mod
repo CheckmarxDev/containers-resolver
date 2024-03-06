@@ -1,4 +1,4 @@
-module github.com/Checkmarx-Containers/containers-resolver
+module github.com/CheckmarxDev/containers-resolver
 
 go 1.22.0
 

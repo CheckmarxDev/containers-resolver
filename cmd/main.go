@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/Checkmarx-Containers/containers-resolver/pkg/containerResolver"
+	"github.com/CheckmarxDev/containers-resolver/pkg/containerResolver"
 	"log"
 )
 
@@ -15,7 +15,7 @@ func main() {
 	//scanPath := "./test_files/withDockerInTar.tar.gz"
 	//scanPath := "path-to-local-dir"
 
-	resultPath := "./test_files/zip-results"
+	resultPath := "./test_files"
 	//resultPath := "./test_files/helm-results"
 	//resultPath := "./test_files/tar-results"
 	//resultPath := "./test_files/dir-results"

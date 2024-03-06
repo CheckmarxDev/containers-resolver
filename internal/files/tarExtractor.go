@@ -4,7 +4,7 @@ import (
 	"archive/tar"
 	"compress/gzip"
 	"fmt"
-	"github.com/Checkmarx-Containers/containers-resolver/internal/logger"
+	"github.com/CheckmarxDev/containers-resolver/internal/logger"
 	"io"
 	"os"
 	"path/filepath"
