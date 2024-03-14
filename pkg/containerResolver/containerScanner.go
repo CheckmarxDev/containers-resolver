@@ -86,9 +86,13 @@ func toImageModels(images []string) []types.ImageModel {
 
 	for _, image := range images {
 		imageNames = append(imageNames, types.ImageModel{
-			Name:   image,
-			Origin: types.UserInput,
-			Path:   types.NoFilePath,
+			Name: image,
+			ImageLocations: []types.ImageLocation{
+				{
+					Origin: types.UserInput,
+					Path:   types.NoFilePath,
+				},
+			},
 		})
 	}
 

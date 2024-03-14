@@ -15,25 +15,27 @@ type RootfsConfig struct {
 }
 
 type ContainerResolution struct {
-	ContainerImages   []ContainerImage
+	ContainerImages   ContainerImage
 	ContainerPackages []ContainerPackage
 }
 
 type ContainerImage struct {
-	ImageName    string
-	ImageTag     string
-	ImagePath    string
-	Distribution string
-	ImageHash    string
-	ImageId      string
-	ImageOrigin  string
-	Layers       []string
-	History      []Layer
+	ImageName      string
+	ImageTag       string
+	Distribution   string
+	ImageHash      string
+	ImageId        string
+	ImageLocations []ImageLocation
+	Layers         []string
+	History        []Layer
+}
+
+type ImageLocation struct {
+	Origin string
+	Path   string
 }
 
 type ContainerPackage struct {
-	ImageId       string
-	ImageHash     string
 	Name          string
 	Version       string
 	Distribution  string

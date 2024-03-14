@@ -54,9 +54,13 @@ func extractImagesFromDockerComposeFile(l *logger.Logger, filePath types.FilePat
 			fullImageName := fmt.Sprintf("%s:%s", imageName, tag)
 
 			imageNames = append(imageNames, types.ImageModel{
-				Name:   fullImageName,
-				Origin: types.DockerComposeFileOrigin,
-				Path:   filePath.RelativePath,
+				Name: fullImageName,
+				ImageLocations: []types.ImageLocation{
+					{
+						Origin: types.DockerComposeFileOrigin,
+						Path:   filePath.RelativePath,
+					},
+				},
 			})
 		}
 	}

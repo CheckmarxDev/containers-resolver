@@ -1,5 +1,9 @@
 package types
 
+import (
+	"strings"
+)
+
 type FileImages struct {
 	Dockerfile    []FilePath
 	DockerCompose []FilePath
@@ -12,7 +16,19 @@ type FilePath struct {
 }
 
 type ImageModel struct {
-	Name   string
+	Name           string
+	ImageLocations []ImageLocation
+}
+
+func (imgModel ImageModel) GetImageLocationsPathsString() string {
+	var paths []string
+	for _, location := range imgModel.ImageLocations {
+		paths = append(paths, location.Path)
+	}
+	return strings.Join(paths, ", ")
+}
+
+type ImageLocation struct {
 	Origin string
 	Path   string
 }
