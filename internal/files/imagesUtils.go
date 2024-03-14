@@ -14,18 +14,21 @@ func mergeImages(images, imagesFromDockerFiles, imagesFromDockerComposeFiles, he
 	if len(helmImages) > 0 {
 		images = append(images, helmImages...)
 	}
-	return removeDuplicates(images)
+	return mergeDuplicates(images)
 }
 
-func removeDuplicates(slice []types.ImageModel) []types.ImageModel {
-	seen := make(map[types.ImageModel]bool)
-	var result []types.ImageModel
+func mergeDuplicates(imageModels []types.ImageModel) []types.ImageModel {
+	aggregated := make(map[string][]types.ImageLocation)
 
-	for _, val := range slice {
-		if _, ok := seen[val]; !ok {
-			seen[val] = true
-			result = append(result, val)
-		}
+	for _, img := range imageModels {
+		aggregated[img.Name] = append(aggregated[img.Name], img.ImageLocations...)
 	}
+
+	// Create the final result by constructing ImageModel objects with aggregated ImageLocations
+	var result []types.ImageModel
+	for name, locations := range aggregated {
+		result = append(result, types.ImageModel{Name: name, ImageLocations: locations})
+	}
+
 	return result
 }

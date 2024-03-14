@@ -94,9 +94,13 @@ func extractImageInfo(yamlString string) ([]types.ImageModel, error) {
 		n, _ := extractImageName(microservice)
 
 		v := types.ImageModel{
-			Name:   n,
-			Origin: types.HelmFileOrigin,
-			Path:   s,
+			Name: n,
+			ImageLocations: []types.ImageLocation{
+				{
+					Origin: types.HelmFileOrigin,
+					Path:   s,
+				},
+			},
 		}
 
 		imageInfoList = append(imageInfoList, v)

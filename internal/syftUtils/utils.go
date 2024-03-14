@@ -20,14 +20,14 @@ import (
 
 func analyzeImage(l *logger.Logger, imageModel types.ImageModel) (*ContainerResolution, error) {
 
-	l.Debug("image is %s, origin: %s, file path: %s", imageModel.Name, imageModel.Origin, imageModel.Path)
+	l.Debug("image is %s, found in file paths: %s", imageModel.Name, imageModel.GetImageLocationsPathsString())
 
 	imageSource, s, err := analyzeImageUsingSyft(l, imageModel.Name)
 	if err != nil {
 		return nil, err
 	}
 
-	result := transformSBOMToContainerResolution(l, *s, imageSource, imageModel.Name, imageModel.Path, imageModel.Origin)
+	result := transformSBOMToContainerResolution(l, *s, imageSource, imageModel)
 
 	return &result, nil
 }
@@ -68,12 +68,12 @@ func getSBOM(src source.Source) (sbom.SBOM, error) {
 	return *s, nil
 }
 
-func transformSBOMToContainerResolution(l *logger.Logger, s sbom.SBOM, imageSource *source.StereoscopeImageSource, imageId, imagePath, imageOrigin string) ContainerResolution {
+func transformSBOMToContainerResolution(l *logger.Logger, s sbom.SBOM, imageSource *source.StereoscopeImageSource, imageModel types.ImageModel) ContainerResolution {
 
-	imageNameAndTag := strings.Split(imageId, ":")
+	imageNameAndTag := strings.Split(imageModel.Name, ":")
 
-	result := ContainerResolution{
-		ContainerImages:   []ContainerImage{},
+	imageResult := ContainerResolution{
+		ContainerImage:    ContainerImage{},
 		ContainerPackages: []ContainerPackage{},
 	}
 	var sourceMetadata source.StereoscopeImageSourceMetadata
@@ -81,38 +81,35 @@ func transformSBOMToContainerResolution(l *logger.Logger, s sbom.SBOM, imageSour
 
 	if sourceMetadata, ok = s.Source.Metadata.(source.StereoscopeImageSourceMetadata); !ok {
 		l.Warn("Value is not StereoscopeImageSourceMetadata - can not analyze")
-		return result
+		return imageResult
 	}
 
 	distro := getDistro(s.Artifacts.LinuxDistribution)
 
-	extractImage(distro, imageSource.ID(), imageId, imagePath, imageOrigin, sourceMetadata, imageNameAndTag, &result)
-	extractImagePackages(s.Artifacts.Packages, imageId, imageSource.ID(), distro, &result)
+	extractImage(distro, imageSource.ID(), imageModel, sourceMetadata, imageNameAndTag, &imageResult)
+	extractImagePackages(s.Artifacts.Packages, distro, &imageResult)
 
-	return result
+	return imageResult
 }
 
-func extractImage(distro string, imageHash artifact.ID, imageId, imagePath, imageOrigin string, sourceMetadata source.StereoscopeImageSourceMetadata, imageNameAndTag []string, result *ContainerResolution) {
+func extractImage(distro string, imageHash artifact.ID, imageModel types.ImageModel, sourceMetadata source.StereoscopeImageSourceMetadata, imageNameAndTag []string, result *ContainerResolution) {
 
 	history := extractHistory(sourceMetadata)
 	layerIds := extractLayerIds(history)
 
-	images := ContainerImage{
-		ImageName:    imageNameAndTag[0],
-		ImageTag:     imageNameAndTag[1],
-		ImagePath:    imagePath,
-		Distribution: distro,
-		ImageHash:    string(imageHash),
-		ImageId:      imageId,
-		ImageOrigin:  imageOrigin,
-		Layers:       layerIds,
-		History:      history,
+	result.ContainerImage = ContainerImage{
+		ImageName:      imageNameAndTag[0],
+		ImageTag:       imageNameAndTag[1],
+		Distribution:   distro,
+		ImageHash:      string(imageHash),
+		ImageId:        imageModel.Name,
+		Layers:         layerIds,
+		History:        history,
+		ImageLocations: getImageLocations(imageModel.ImageLocations),
 	}
-
-	result.ContainerImages = append(result.ContainerImages, images)
 }
 
-func extractImagePackages(packages *pkg.Collection, imageId string, imageHash artifact.ID, distro string, result *ContainerResolution) {
+func extractImagePackages(packages *pkg.Collection, distro string, result *ContainerResolution) {
 
 	var containerPackages []ContainerPackage
 
@@ -121,8 +118,6 @@ func extractImagePackages(packages *pkg.Collection, imageId string, imageHash ar
 		sourceName, sourceVersion := getPackageRelationships(containerPackage)
 
 		containerPackages = append(containerPackages, ContainerPackage{
-			ImageId:       imageId,
-			ImageHash:     string(imageHash),
 			Name:          containerPackage.Name,
 			Version:       containerPackage.Version,
 			Distribution:  distro,
@@ -275,4 +270,15 @@ func trimPatchVersion(versionID string) string {
 		return matches[1]
 	}
 	return versionID
+}
+
+func getImageLocations(imageLocations []types.ImageLocation) []ImageLocation {
+	var slice []ImageLocation
+	for _, location := range imageLocations {
+		slice = append(slice, ImageLocation{
+			Origin: location.Origin,
+			Path:   location.Path,
+		})
+	}
+	return slice
 }

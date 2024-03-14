@@ -5,8 +5,8 @@ import (
 	"log"
 )
 
-const defaultImage = "debian:12"
-const defaultImage2 = "nginx:latest"
+const defaultImage = "rabbitmq:3"
+const defaultImage2 = "golang:1.21.5-alpine3.18"
 
 func main() {
 

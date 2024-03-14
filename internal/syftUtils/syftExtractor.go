@@ -9,12 +9,9 @@ type SyftExtractor struct {
 	*logger.Logger
 }
 
-func (se *SyftExtractor) AnalyzeImages(images []types.ImageModel) (*ContainerResolution, error) {
+func (se *SyftExtractor) AnalyzeImages(images []types.ImageModel) ([]*ContainerResolution, error) {
 
-	containerResolution := &ContainerResolution{
-		ContainerImages:   []ContainerImage{},
-		ContainerPackages: []ContainerPackage{},
-	}
+	var containerResolution []*ContainerResolution
 
 	for _, imageModel := range images {
 		se.Debug("going to analyze image using syft. image: %s", imageModel.Name)
@@ -24,9 +21,7 @@ func (se *SyftExtractor) AnalyzeImages(images []types.ImageModel) (*ContainerRes
 			se.Error("Could not analyze image: %s err: %+v", imageModel.Name, err)
 			continue
 		}
-
-		containerResolution.ContainerImages = append(containerResolution.ContainerImages, tmpResolution.ContainerImages...)
-		containerResolution.ContainerPackages = append(containerResolution.ContainerPackages, tmpResolution.ContainerPackages...)
+		containerResolution = append(containerResolution, tmpResolution)
 		se.Info("successfully analyzed image: %s", imageModel.Name)
 	}
 	return containerResolution, nil
