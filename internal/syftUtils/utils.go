@@ -73,7 +73,7 @@ func transformSBOMToContainerResolution(l *logger.Logger, s sbom.SBOM, imageSour
 	imageNameAndTag := strings.Split(imageModel.Name, ":")
 
 	imageResult := ContainerResolution{
-		ContainerImages:   ContainerImage{},
+		ContainerImage:    ContainerImage{},
 		ContainerPackages: []ContainerPackage{},
 	}
 	var sourceMetadata source.StereoscopeImageSourceMetadata
@@ -97,7 +97,7 @@ func extractImage(distro string, imageHash artifact.ID, imageModel types.ImageMo
 	history := extractHistory(sourceMetadata)
 	layerIds := extractLayerIds(history)
 
-	result.ContainerImages = ContainerImage{
+	result.ContainerImage = ContainerImage{
 		ImageName:      imageNameAndTag[0],
 		ImageTag:       imageNameAndTag[1],
 		Distribution:   distro,

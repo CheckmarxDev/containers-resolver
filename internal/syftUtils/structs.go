@@ -15,7 +15,7 @@ type RootfsConfig struct {
 }
 
 type ContainerResolution struct {
-	ContainerImages   ContainerImage
+	ContainerImage    ContainerImage
 	ContainerPackages []ContainerPackage
 }
 
