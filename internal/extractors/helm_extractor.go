@@ -91,33 +91,39 @@ func extractImageInfo(yamlString string) ([]types.ImageModel, error) {
 		}
 
 		s, _ := extractSource(section)
-		n, _ := extractImageName(microservice)
+		n := extractImageName(microservice)
 
-		v := types.ImageModel{
-			Name: n,
-			ImageLocations: []types.ImageLocation{
-				{
-					Origin: types.HelmFileOrigin,
-					Path:   s,
+		if n != "" {
+			v := types.ImageModel{
+				Name: n,
+				ImageLocations: []types.ImageLocation{
+					{
+						Origin: types.HelmFileOrigin,
+						Path:   s,
+					},
 				},
-			},
-		}
+			}
 
-		imageInfoList = append(imageInfoList, v)
+			imageInfoList = append(imageInfoList, v)
+		}
 	}
 
 	return imageInfoList, nil
 }
 
-func extractImageName(microservice types.Microservice) (string, error) {
+func extractImageName(microservice types.Microservice) string {
 	var imageName string
 	if microservice.Spec.Image.Registry != "" {
 		imageName += microservice.Spec.Image.Registry + "/"
 	}
+
+	if microservice.Spec.Image.Name == "" {
+		return ""
+	}
 	imageName += microservice.Spec.Image.Name + ":"
 	imageName += microservice.Spec.Image.Tag
 
-	return imageName, nil
+	return imageName
 }
 
 func extractSource(yamlBlock string) (string, error) {

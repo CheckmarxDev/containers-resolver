@@ -21,10 +21,24 @@ func mergeDuplicates(imageModels []types.ImageModel) []types.ImageModel {
 	aggregated := make(map[string][]types.ImageLocation)
 
 	for _, img := range imageModels {
-		aggregated[img.Name] = append(aggregated[img.Name], img.ImageLocations...)
+		if locations, ok := aggregated[img.Name]; ok {
+			for _, location := range img.ImageLocations {
+				found := false
+				for _, existingLocation := range locations {
+					if existingLocation.Origin == location.Origin && existingLocation.Path == location.Path {
+						found = true
+						break
+					}
+				}
+				if !found {
+					aggregated[img.Name] = append(aggregated[img.Name], location)
+				}
+			}
+		} else {
+			aggregated[img.Name] = img.ImageLocations
+		}
 	}
 
-	// Create the final result by constructing ImageModel objects with aggregated ImageLocations
 	var result []types.ImageModel
 	for name, locations := range aggregated {
 		result = append(result, types.ImageModel{Name: name, ImageLocations: locations})

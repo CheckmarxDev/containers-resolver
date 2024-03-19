@@ -1,0 +1,59 @@
+# Default values for ast-audit.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+name: "containers"
+mock_component: false
+production: false
+platform: ""
+networking:
+  domain: 127.0.0.1
+deploymentType: "multi_tenant"
+featureFlagsApiKey: ""
+component:
+  replicaCount: 1
+scaServices:
+  scaDomain: ""
+  iamDomain: ""
+  iamClientId: "service-client-app"
+  iamClientSecret: ""
+  localTenant: "demo"
+# ------------ Tag for microservice_template1
+containers_worker:
+  discovryName: "containers-worker"
+  scanStatusPort: 4321
+  image:
+    tag: b201b1f
+  scale:
+    replicaCount: ""
+    autoscaling:
+      enabled: false
+      minReplicas: 1
+      maxReplicas: 20
+      targetCPUUtilizationPercentage: 70
+      targetMemoryUtilizationPercentage: 70
+  resources:
+    requests:
+      cpu: "20m"
+      memory: "600Mi"
+    limits:
+      cpu: ""
+      memory: "600Mi"
+
+image_insights:
+  image:
+    tag: f4b507b
+  scale:
+    replicaCount: ""
+    autoscaling:
+      enabled: false
+      minReplicas: 1
+      maxReplicas: 20
+      targetCPUUtilizationPercentage: 70
+      targetMemoryUtilizationPercentage: 70
+  resources:
+    requests:
+      cpu: "20m"
+      memory: "600Mi"
+    limits:
+      cpu: ""
+      memory: "600Mi"

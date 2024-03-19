@@ -1,4 +1,4 @@
-package syftUtils
+package syftExtractor
 
 type ImageConfig struct {
 	History []HistoryConfig `json:"history"`
