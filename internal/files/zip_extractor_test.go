@@ -8,7 +8,6 @@ import (
 
 func TestExtractZip(t *testing.T) {
 	l := logger.NewLogger(true)
-
 	t.Run("ValidZip", func(t *testing.T) {
 		// Provide the path to a valid zip file for testing
 		validZipPath := "../../test_files/withDockerInZip.zip"
