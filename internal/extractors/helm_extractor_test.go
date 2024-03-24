@@ -143,7 +143,7 @@ spec:
       targetCPUUtilizationPercentage: 70
       targetMemoryUtilizationPercentage: 70
 
-  envirmentVariablesUnencrypted:
+  environmentVariablesUnencrypted:
     - key: BucketName
       value: "containers-image-risks-bucket"
     - key: REDISSHAREDS3BUCKET
@@ -179,7 +179,7 @@ spec:
     minio:
       enabled: true
       includeSchema: true
-      envirmentVariablesMap:
+      environmentVariablesMap:
         address:
           - "LocalServerUrl"
         region:
@@ -195,7 +195,7 @@ spec:
             - "OBJECT_STORE_STORAGE_TLS_SKIP_VERIFY"
     redis:
       enabled: true
-      envirmentVariablesMap:
+      environmentVariablesMap:
         isCluster: "REDIS_IS_CLUSTER_MODE"
         address: "RedisAddresses"
         password: "RedisPassword"
@@ -206,7 +206,7 @@ spec:
       liquibase:
         enabled: false
         definitionsDirInImage: "/app/db"
-      envirmentVariablesMap:
+      environmentVariablesMap:
         read:
           connection_strings:
           - "DATABASE_READ_URL"
@@ -222,14 +222,14 @@ spec:
   messaging:
     rabbitMQ:
       enabled: true
-      envirmentVariablesMap:
+      environmentVariablesMap:
         tls:
           enabled: ""
           skipVerify: "RABBIT_TLS_SKIP_VERIFY"
         uri: "RabbitMqUrl"
 
   internalNetworking:
-    addionalServiceName: "image-risks"
+    additionalServiceName: "image-risks"
     ports:
       - port: 80
         name: "rest"

@@ -19,29 +19,36 @@ func mergeImages(images, imagesFromDockerFiles, imagesFromDockerComposeFiles, he
 
 func mergeDuplicates(imageModels []types.ImageModel) []types.ImageModel {
 	aggregated := make(map[string][]types.ImageLocation)
+	var result []types.ImageModel
 
 	for _, img := range imageModels {
-		if locations, ok := aggregated[img.Name]; ok {
+		if _, ok := aggregated[img.Name]; !ok {
+			// If the image name is not yet in the result, add it with its locations
+			result = append(result, types.ImageModel{Name: img.Name, ImageLocations: img.ImageLocations})
+			aggregated[img.Name] = img.ImageLocations
+		} else {
+			// If the image name is already in the result, merge the locations
 			for _, location := range img.ImageLocations {
 				found := false
-				for _, existingLocation := range locations {
+				for _, existingLocation := range aggregated[img.Name] {
 					if existingLocation.Origin == location.Origin && existingLocation.Path == location.Path {
 						found = true
 						break
 					}
 				}
 				if !found {
+					// Append only new locations to the existing entry in the result slice
+					for i := range result {
+						if result[i].Name == img.Name {
+							result[i].ImageLocations = append(result[i].ImageLocations, location)
+							break
+						}
+					}
+					// Update the map to include the new location
 					aggregated[img.Name] = append(aggregated[img.Name], location)
 				}
 			}
-		} else {
-			aggregated[img.Name] = img.ImageLocations
 		}
-	}
-
-	var result []types.ImageModel
-	for name, locations := range aggregated {
-		result = append(result, types.ImageModel{Name: name, ImageLocations: locations})
 	}
 
 	return result

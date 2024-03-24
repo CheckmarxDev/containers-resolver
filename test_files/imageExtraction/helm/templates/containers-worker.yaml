@@ -25,7 +25,7 @@ spec:
       targetCPUUtilizationPercentage: {{ .Values.containers_worker.scale.autoscaling.targetCPUUtilizationPercentage | default "70"}}
       targetMemoryUtilizationPercentage: {{ .Values.containers_worker.scale.autoscaling.targetMemoryUtilizationPercentage | default "70"}}
 
-  envirmentVariablesUnencrypted:
+  environmentVariablesUnencrypted:
     # new scan worker config
     - key: CONTAINERS_NEW_SCAN_JOB_TYPE
       value: {{ printf "containers-scan-initiator-%s" .Release.Namespace }}
@@ -64,7 +64,7 @@ spec:
   persistent:
     redis:
       enabled: true
-      envirmentVariablesMap:
+      environmentVariablesMap:
         isCluster: "REDIS_IS_CLUSTER_MODE"
         address: "REDIS_ADDRESS"
         password: "REDIS_PASSWORD"
@@ -74,7 +74,7 @@ spec:
   workflow:
     zeebe:
       enabled: true
-      envirmentVariablesMap:
+      environmentVariablesMap:
         address: "WORKFLOW_ZEEBE_BROKER_ADDRESS"
         authServerURL: "WORKFLOW_ZEEBE_AUTH_SERVER_URL"
         clientId: "WORKFLOW_ZEEBE_AUTH_CLIENT_ID"
@@ -87,14 +87,14 @@ spec:
   messaging:
     rabbitMQ:
       enabled: true
-      envirmentVariablesMap:
+      environmentVariablesMap:
         tls:
           enabled: ""
           skipVerify: "RABBIT_TLS_SKIP_VERIFY"
         uri: "RABBIT_CONNECTION_STRING" # https://www.rabbitmq.com/uri-query-parameters.html
 
   internalNetworking:
-    addionalServiceName: {{ .Values.containers_worker.discovryName | quote }}
+    additionalServiceName: {{ .Values.containers_worker.discoveryName | quote }}
     ports:
       - port: 80
         name: "rest"
@@ -104,12 +104,12 @@ spec:
   core:
     scans:
       enabled: true
-      envirmentVariablesMap:
+      environmentVariablesMap:
         grpcProjects:
           hostAndPort: "PROJECTS_ENDPOINT"
     repostore:
       enabled: true
-      envirmentVariablesMap:
+      environmentVariablesMap:
         grpc:
           hostAndPort: "REPOSTORE_GRPC_ADDRESS"
 
