@@ -112,7 +112,7 @@ func TestExtractImagesFromDockerComposeFiles_NoImagesFound(t *testing.T) {
 	l := logger.NewLogger(false)
 
 	filePaths := []types.FilePath{
-		{FullPath: "../../test_files/imageExtraction/dockerCompose/docker-compose-4.yaml", RelativePath: "docker-compose-3.yaml"}, // Empty Docker Compose file
+		{FullPath: "../../test_files/imageExtraction/dockerCompose/docker-compose-5.yaml", RelativePath: "docker-compose-5.yaml"}, // Empty Docker Compose file
 	}
 
 	images, err := ExtractImagesFromDockerComposeFiles(l, filePaths)

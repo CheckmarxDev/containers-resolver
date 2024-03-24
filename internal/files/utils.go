@@ -11,8 +11,8 @@ import (
 )
 
 var (
-	dockerfilePattern    = regexp.MustCompile(`Dockerfile$`)
-	dockerComposePattern = regexp.MustCompile(`docker-compose(\.yml|\.yaml)$`)
+	dockerfilePattern    = regexp.MustCompile(`^Dockerfile(-[a-zA-Z0-9]+)?$`)
+	dockerComposePattern = regexp.MustCompile(`docker-compose(-[a-zA-Z0-9]+)?(\.yml|\.yaml)$`)
 )
 
 func IsValidFolderPath(path string) (bool, error) {
