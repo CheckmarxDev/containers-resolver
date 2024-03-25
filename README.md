@@ -14,10 +14,9 @@ This module supports scanning and analyzing the following types of files to extr
 
 By supporting these file types, this module offers versatility in scanning and analyzing various sources of Docker images, catering to different deployment scenarios and containerization strategies.
 
-
 ## Installation
 
-You can install this module using Go modules.
+You can install this module using Go modules. 
 
 ```bash
 go get github.com/your-username/your-repo
