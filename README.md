@@ -19,7 +19,7 @@ By supporting these file types, this module offers versatility in scanning and a
 You can install this module using Go modules. 
 
 ```bash
-go get github.com/your-username/your-repo
+go get github.com/CheckmarxDev/containers-resolver
 ```
 
 

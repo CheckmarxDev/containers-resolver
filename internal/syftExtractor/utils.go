@@ -16,8 +16,6 @@ import (
 	"github.com/anchore/syft/syft/pkg"
 	"github.com/anchore/syft/syft/sbom"
 	"github.com/anchore/syft/syft/source"
-	"github.com/saferwall/pe/log"
-	"os"
 	"regexp"
 	"strings"
 )
@@ -80,12 +78,6 @@ func formatSBOM(s sbom.SBOM) []byte {
 	if err != nil {
 		panic(err)
 	}
-
-	err = os.WriteFile("../../test_files/syft-results.json", bytes, 0644)
-	if err != nil {
-		log.Error("Could not save syft output")
-	}
-
 	return bytes
 }
 
