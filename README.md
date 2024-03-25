@@ -1,6 +1,7 @@
 # containers-resolve
 This Go module simplifies the process of analyzing images by providing tools to extract images from various file formats and resolve the software packages within them. It enables users to gain insights into the contents of Docker images, facilitating tasks such as vulnerability assessments and software inventory management. With support for debugging and flexible extraction methods, it's a valuable resource for developers, DevOps engineers, and security professionals working with containerized environments.
 
+
 ## Supported File Types for Package Analysis
 
 This module supports scanning and analyzing the following types of files to extract Docker images and resolve their associated packages:
