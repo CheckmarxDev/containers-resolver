@@ -69,6 +69,32 @@ func TestSyftExtractor(t *testing.T) {
 		}
 	})
 
+	t.Run("ImagesAreNil", func(t *testing.T) {
+
+		resolutions, err := extractor.AnalyzeImages(nil)
+		if err != nil {
+			t.Errorf("Error analyzing images: %v", err)
+		}
+
+		if len(resolutions) != 0 {
+			t.Errorf("Resolutionshould be empty")
+		}
+	})
+
+	t.Run("ImagesAreEmpty", func(t *testing.T) {
+
+		images := []types.ImageModel{}
+
+		resolutions, err := extractor.AnalyzeImages(images)
+		if err != nil {
+			t.Errorf("Error analyzing images: %v", err)
+		}
+
+		if len(resolutions) != 0 {
+			t.Errorf("Resolutionshould be empty")
+		}
+	})
+
 	t.Run("OneImageSuccessOneImageFailure", func(t *testing.T) {
 		// Define a list of images with one valid and one failing image
 		images := []types.ImageModel{

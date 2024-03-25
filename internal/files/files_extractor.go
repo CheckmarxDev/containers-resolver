@@ -14,7 +14,6 @@ type ImagesExtractor struct {
 }
 
 func (fe *ImagesExtractor) ExtractAndMergeImagesFromFiles(files types.FileImages, images []types.ImageModel) ([]types.ImageModel, error) {
-
 	dockerfileImages, err := extractors.ExtractImagesFromDockerfiles(fe.Logger, files.Dockerfile)
 	if err != nil {
 		fe.Logger.Error("Could not extract images from docker files", err)

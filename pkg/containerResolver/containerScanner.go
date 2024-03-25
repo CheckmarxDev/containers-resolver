@@ -3,7 +3,7 @@ package containersResolver
 import (
 	"github.com/CheckmarxDev/containers-resolver/internal/files"
 	"github.com/CheckmarxDev/containers-resolver/internal/logger"
-	"github.com/CheckmarxDev/containers-resolver/internal/syftExtractor"
+	se "github.com/CheckmarxDev/containers-resolver/internal/syftExtractor"
 	"github.com/CheckmarxDev/containers-resolver/internal/types"
 )
 
@@ -15,7 +15,7 @@ func Resolve(scanPath string, resolutionFolderPath string, images []string, isDe
 		Logger: resolverLogger,
 	}
 
-	syftExtractor := syftExtractor.SyftExtractor{
+	syftExtractor := se.SyftExtractor{
 		Logger: resolverLogger,
 	}
 	resolverLogger.Debug("Resolve func parameters: scanPath=%s, resolutionFolderPath=%s, images=%s, isDebug=%t", scanPath, resolutionFolderPath, images, isDebug)
@@ -82,7 +82,7 @@ func cleanup(originalPath string, outputPath string) error {
 }
 
 func toImageModels(images []string) []types.ImageModel {
-	var imageNames []types.ImageModel
+	imageNames := []types.ImageModel{}
 
 	for _, image := range images {
 		imageNames = append(imageNames, types.ImageModel{

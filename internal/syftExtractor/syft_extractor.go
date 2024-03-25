@@ -10,6 +10,9 @@ type SyftExtractor struct {
 }
 
 func (se *SyftExtractor) AnalyzeImages(images []types.ImageModel) ([]*ContainerResolution, error) {
+	if images == nil {
+		return []*ContainerResolution{}, nil
+	}
 
 	var containerResolution []*ContainerResolution
 
@@ -24,5 +27,10 @@ func (se *SyftExtractor) AnalyzeImages(images []types.ImageModel) ([]*ContainerR
 		containerResolution = append(containerResolution, tmpResolution)
 		se.Info("successfully analyzed image: %s", imageModel.Name)
 	}
+
+	if containerResolution == nil || len(containerResolution) < 1 {
+		return []*ContainerResolution{}, nil
+	}
+
 	return containerResolution, nil
 }
