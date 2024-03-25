@@ -1,0 +1,149 @@
+apiVersion: ast.checkmarx.com/v1
+kind: Microservice
+metadata:
+  name: {{ include "get-fullname" (list . "image-insights") }}
+  labels: {{- include "containers.labels" . | nindent 4 }}
+
+
+spec:
+  component: {{ .Values.name | quote }}
+
+  image:
+    registry: checkmarx.jfrog.io/ast-docker
+    name: image-insights
+    pullPolicy: IfNotPresent # Overrides the image tag whose default is the chart appVersion.
+    tag: {{ .Values.image_insights.image.tag | quote }}
+    imagePullSecrets: [ ]
+
+  scale:
+    static:
+      count: {{ default .Values.component.replicaCount .Values.image_insights.scale.replicaCount }}
+    auto:
+      enabled: {{ .Values.image_insights.scale.autoscaling.enabled | default false }}
+      minReplicas: {{ .Values.image_insights.scale.autoscaling.minReplicas | default "1"}}
+      maxReplicas: {{ .Values.image_insights.scale.autoscaling.maxReplicas | default "20"}}
+      targetCPUUtilizationPercentage: {{ .Values.image_insights.scale.autoscaling.targetCPUUtilizationPercentage | default "70"}}
+      targetMemoryUtilizationPercentage: {{ .Values.image_insights.scale.autoscaling.targetMemoryUtilizationPercentage | default "70"}}
+
+  environmentVariablesUnencrypted:
+    - key: BucketName
+      value: "image-insights-bucket"
+    - key: REDISSHAREDS3BUCKET
+      value: "image-insights-bucket"
+    - key: MaxReconnectAttempts
+      value: "10"
+    - key: ReconnectDelayInSeconds
+      value: "3"
+    - key: RabbitMqProtocol
+      value: "AMQP"
+    - key: RabbitMqSendTimeout
+      value: "30000"
+    - key: TopicExchangeName
+      value: "containers.topic"
+    - key: RoutingKey
+      value: "containers.scan"
+    - key: ActivateResolveImageInsightsQueueName
+      value: "activate-resolve-image-insights"
+    - key: FinishedResolveImageInsightsQueueName
+      value: "finished-resolve-image-insights"
+    - key: ResolvedImagePackagesQueueName
+      value: "resolved-image-packages"
+    - key: TemplateFileName
+      value: "/app/Resources/Template.yaml"
+    - key: DefaultPodSizeInBytes
+      value: "1400000000"
+    - key: ImageInsightsExtractorRegistryPrefix
+      value: "https://checkmarx.jfrog.io/docker"
+    - key: ImageCorrelationsServiceApi
+      value: "https://api-sca.checkmarx.net"
+    - key: ImageCorrelationsCacheExpirationInMinutes
+      value: "60"
+    - key: CacheDirLocation 
+      value: /app/cache
+    - key: ContainerProxyUrl 
+      value: "http://sca-proxy-for-containers/image-correlations"
+
+
+  persistent:
+    minio:
+      enabled: true
+      includeSchema: true
+      environmentVariablesMap:
+        address:
+          - "LocalServerUrl"
+        region:
+          - "LocalRegion"
+        accessKey:
+          - "LocalAccessKey"
+        accessSecret:
+          - "LocalSecretKey"
+        tls:
+          enabled:
+            - "OBJECT_STORE_STORAGE_TLS_ENABLED"
+          skipVerify:
+            - "OBJECT_STORE_STORAGE_TLS_SKIP_VERIFY"
+    redis:
+      enabled: true
+      environmentVariablesMap:
+        isCluster: "REDIS_IS_CLUSTER_MODE"
+        address: "RedisAddresses"
+        password: "RedisPassword"
+        tls:
+          enabled: "RedisSSLEnabled"
+    postgres:
+      enabled: true
+      liquibase:
+        enabled: false
+        definitionsDirInImage: "/app/db"
+      environmentVariablesMap:
+        read:
+          connection_strings:
+          - "DATABASE_READ_URL" 
+        readWrite:
+          host: "DatabaseHost"
+          port: "DatabasePort"
+          db: "DatabaseName"
+          username: "DatabaseUser"
+          password: "DatabasePassword"
+          connection_strings:
+          - "DATABASE_WRITE_URL"
+
+  messaging:
+    rabbitMQ:
+      enabled: true
+      environmentVariablesMap:
+        tls:
+          enabled: ""
+          skipVerify: "RABBIT_TLS_SKIP_VERIFY"
+        uri: "RabbitMqUrl"
+
+  internalNetworking:
+    additionalServiceName: "image-insights"
+    ports:
+      - port: 80
+        name: "rest"
+      - port: 50051
+        name: "grpc"
+
+  livenessProbe:
+    enabled: true
+    type: "httpGet"
+    httpGet:
+      path: "/health"
+      port: 80
+  readinessProbe:
+    enabled: true
+    type: "httpGet"
+    httpGet:
+      path: "/health"
+      port: 80
+
+  {{- if .Values.production }}
+  resources:
+    requests:
+      cpu: {{ .Values.image_insights.resources.requests.cpu }}
+      memory: {{ .Values.image_insights.resources.requests.memory }}
+    limits:
+      cpu: {{ .Values.image_insights.resources.limits.cpu }}
+      memory: {{ .Values.image_insights.resources.limits.memory }}
+  {{- end }}

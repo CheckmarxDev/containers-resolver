@@ -5,6 +5,7 @@ go 1.21.8
 require (
 	github.com/anchore/stereoscope v0.0.2-0.20240208195325-681f6715b0e3
 	github.com/anchore/syft v0.105.0
+	github.com/saferwall/pe v1.5.2
 	gopkg.in/yaml.v2 v2.4.0
 	helm.sh/helm/v3 v3.14.2
 )
@@ -59,7 +60,7 @@ require (
 	github.com/distribution/reference v0.5.0 // indirect
 	github.com/docker/cli v25.0.1+incompatible // indirect
 	github.com/docker/distribution v2.8.3+incompatible // indirect
-	github.com/docker/docker v25.0.3+incompatible // indirect
+	github.com/docker/docker v25.0.5+incompatible // indirect
 	github.com/docker/docker-credential-helpers v0.7.0 // indirect
 	github.com/docker/go-connections v0.5.0 // indirect
 	github.com/docker/go-events v0.0.0-20190806004212-e31b211e4f1c // indirect
@@ -178,7 +179,6 @@ require (
 	github.com/rivo/uniseg v0.4.6 // indirect
 	github.com/rubenv/sql-migrate v1.5.2 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
-	github.com/saferwall/pe v1.5.2 // indirect
 	github.com/sagikazarmark/locafero v0.3.0 // indirect
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
 	github.com/saintfish/chardet v0.0.0-20230101081208-5e3ef4b5456d // indirect

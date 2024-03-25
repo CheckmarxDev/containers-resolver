@@ -1,0 +1,18 @@
+# To run locally: docker-compose up --build --abort-on-container-exit
+version: "3.7"
+services:
+  app:
+    image: mcr.microsoft.com/dotnet/sdk:6.0
+    command: >
+      bash -cxe "
+        echo Checking services health...
+      "
+    environment:
+      Environment: local
+      COMPONENTTESTS: "true"
+      INTEGRATIONTESTS: "true"
+      DatabaseHost: database
+      DatabaseUser: root
+      DatabasePassword: 123456
+      DatabasePort: 5432
+      DatabaseName: ImageCorrelations

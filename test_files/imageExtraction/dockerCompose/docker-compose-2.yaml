@@ -1,0 +1,31 @@
+# To run locally: docker-compose up --build --abort-on-container-exit
+version: "3.7"
+services:
+  database:
+    image: postgres:12.0
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_DB: ImageCorrelations
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: 123456
+
+  minio:
+    image: minio/minio:RELEASE.2020-06-22T03-12-50Z
+    ports:
+      - 9000:9000
+    entrypoint: "sh -cex"
+    command: >
+      "
+          mkdir -p /tmp/storage/dynamobucket
+          minio server --address minio:9000 --quiet /tmp/storage
+      "
+    environment:
+      MINIO_ACCESS_KEY: key
+      MINIO_SECRET_KEY: verysecretkey
+      MINIO_REGION_NAME: us-east-1
+
+  redis:
+    image: redis:6.0.10-alpine
+    ports:
+      - 6379:6379

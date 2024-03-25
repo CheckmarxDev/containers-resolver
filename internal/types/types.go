@@ -20,6 +20,12 @@ type ImageModel struct {
 	ImageLocations []ImageLocation
 }
 
+type HelmChartInfo struct {
+	Directory     string     // Absolute path to the Helm chart directory
+	ValuesFile    string     // Relative path to the values.yaml file
+	TemplateFiles []FilePath // Relative paths to template files
+}
+
 func (imgModel ImageModel) GetImageLocationsPathsString() string {
 	var paths []string
 	for _, location := range imgModel.ImageLocations {
@@ -40,12 +46,6 @@ const (
 	HelmFileOrigin          = "Helm"
 	NoFilePath              = "NONE"
 )
-
-type HelmChartInfo struct {
-	Directory     string     // Absolute path to the Helm chart directory
-	ValuesFile    string     // Relative path to the values.yaml file
-	TemplateFiles []FilePath // Relative paths to template files
-}
 
 type Microservice struct {
 	Spec struct {

@@ -1,4 +1,4 @@
-package syftUtils
+package syftExtractor
 
 import (
 	"context"
@@ -10,10 +10,14 @@ import (
 	"github.com/anchore/syft/syft"
 	"github.com/anchore/syft/syft/artifact"
 	"github.com/anchore/syft/syft/file"
+	"github.com/anchore/syft/syft/format"
+	"github.com/anchore/syft/syft/format/syftjson"
 	"github.com/anchore/syft/syft/linux"
 	"github.com/anchore/syft/syft/pkg"
 	"github.com/anchore/syft/syft/sbom"
 	"github.com/anchore/syft/syft/source"
+	"github.com/saferwall/pe/log"
+	"os"
 	"regexp"
 	"strings"
 )
@@ -51,7 +55,7 @@ func analyzeImageUsingSyft(l *logger.Logger, imageId string) (*source.Stereoscop
 		return nil, nil, err
 	}
 
-	s, err := getSBOM(imageSource)
+	s, err := getSBOM(imageSource, true)
 	if err != nil {
 		l.Error("Could get image SBOM. image: %s. err: %+v", imageId, err)
 		return nil, nil, err
@@ -59,13 +63,30 @@ func analyzeImageUsingSyft(l *logger.Logger, imageId string) (*source.Stereoscop
 	return imageSource, &s, nil
 }
 
-func getSBOM(src source.Source) (sbom.SBOM, error) {
+func getSBOM(src source.Source, saveToFile bool) (sbom.SBOM, error) {
 	s, err := syft.CreateSBOM(context.Background(), src, nil)
 	if err != nil {
 		return sbom.SBOM{}, err
 	}
 
+	if saveToFile {
+		formatSBOM(*s)
+	}
 	return *s, nil
+}
+
+func formatSBOM(s sbom.SBOM) []byte {
+	bytes, err := format.Encode(s, syftjson.NewFormatEncoder())
+	if err != nil {
+		panic(err)
+	}
+
+	err = os.WriteFile("../../test_files/syft-results.json", bytes, 0644)
+	if err != nil {
+		log.Error("Could not save syft output")
+	}
+
+	return bytes
 }
 
 func transformSBOMToContainerResolution(l *logger.Logger, s sbom.SBOM, imageSource *source.StereoscopeImageSource, imageModel types.ImageModel) ContainerResolution {

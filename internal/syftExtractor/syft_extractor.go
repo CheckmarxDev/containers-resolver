@@ -1,4 +1,4 @@
-package syftUtils
+package syftExtractor
 
 import (
 	"github.com/CheckmarxDev/containers-resolver/internal/logger"
