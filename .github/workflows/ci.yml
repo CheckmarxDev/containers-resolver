@@ -33,7 +33,6 @@ jobs:
             echo "Your code coverage test passed! Coverage precentage is: $CODE_COV"
             exit 0
           fi
-
   lint:
     name: lint
     runs-on: ubuntu-latest
@@ -49,5 +48,5 @@ jobs:
         with:
           skip-pkg-cache: true
           version: v1.54.2
-          args: -c .golint.yaml
+          args: -c .golint.yml
           only-new-issues: true
