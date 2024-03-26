@@ -49,5 +49,5 @@ jobs:
         with:
           skip-pkg-cache: true
           version: v1.54.2
-          args: -c .golangci.yml
+          args: -c .golint.yaml
           only-new-issues: true
