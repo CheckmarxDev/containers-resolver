@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/CheckmarxDev/containers-resolver/pkg/containerResolver"
+	containersResolver "github.com/CheckmarxDev/containers-resolver/pkg/containerResolver"
 	"log"
 )
 

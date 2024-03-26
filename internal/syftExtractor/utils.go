@@ -22,7 +22,7 @@ import (
 
 func analyzeImage(l *logger.Logger, imageModel types.ImageModel) (*ContainerResolution, error) {
 
-	l.Debug("image is %s, found in file paths: %s", imageModel.Name, imageModel.GetImageLocationsPathsString())
+	l.Debug("image is %s, found in file paths: %s", imageModel.Name, GetImageLocationsPathsString(imageModel))
 
 	imageSource, s, err := analyzeImageUsingSyft(l, imageModel.Name)
 	if err != nil {
@@ -294,4 +294,12 @@ func getImageLocations(imageLocations []types.ImageLocation) []ImageLocation {
 		})
 	}
 	return slice
+}
+
+func GetImageLocationsPathsString(imgModel types.ImageModel) string {
+	var paths []string
+	for _, location := range imgModel.ImageLocations {
+		paths = append(paths, location.Path)
+	}
+	return strings.Join(paths, ", ")
 }
