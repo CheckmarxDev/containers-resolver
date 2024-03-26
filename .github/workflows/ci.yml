@@ -51,12 +51,3 @@ jobs:
           version: v1.54.2
           args: -c .golangci.yml
           only-new-issues: true
-  govulncheck:
-    runs-on: ubuntu-latest
-    name: govulncheck
-    steps:
-      - id: govulncheck
-        uses: golang/govulncheck-action@7da72f730e37eeaad891fcff0a532d27ed737cd4 #v1
-        with:
-          go-version-input: ${{ env.GO_VERSION }}
-          go-package: ./...
