@@ -34,7 +34,6 @@ jobs:
             exit 0
           fi
   lint:
-    name: lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
