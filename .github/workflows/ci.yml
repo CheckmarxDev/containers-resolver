@@ -19,7 +19,7 @@ jobs:
       - run: go version
       - name: go test with coverage
         run: |
-            go run gotest.tools/gotestsum@latest --format pkgname -- -coverprofile=cover.out ./internal/...
+            go run gotest.tools/gotestsum@latest --format testdox -- -coverprofile=cover.out ./internal/...
       - name: Check if total coverage is greater then 80
         shell: bash
         run: |
