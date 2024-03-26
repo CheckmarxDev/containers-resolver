@@ -1,8 +1,7 @@
-package types
+//go:build !coverage
+// +build !coverage
 
-import (
-	"strings"
-)
+package types
 
 type FileImages struct {
 	Dockerfile    []FilePath
@@ -24,14 +23,6 @@ type HelmChartInfo struct {
 	Directory     string     // Absolute path to the Helm chart directory
 	ValuesFile    string     // Relative path to the values.yaml file
 	TemplateFiles []FilePath // Relative paths to template files
-}
-
-func (imgModel ImageModel) GetImageLocationsPathsString() string {
-	var paths []string
-	for _, location := range imgModel.ImageLocations {
-		paths = append(paths, location.Path)
-	}
-	return strings.Join(paths, ", ")
 }
 
 type ImageLocation struct {

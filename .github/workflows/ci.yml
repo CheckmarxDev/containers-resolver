@@ -1,0 +1,62 @@
+name: Checkmarx One CLI
+
+on:
+  pull_request:
+
+env:
+  GO_VERSION: '1.21.8'
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+      - name: Set up Go version
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
+      - run: go version
+      - name: go test with coverage
+        run: |
+            go run gotest.tools/gotestsum@latest --format pkgname -- -coverprofile=cover.out ./internal/...
+      - name: Check if total coverage is greater then 80
+        shell: bash
+        run: |
+          CODE_COV=$(go tool cover -func cover.out | grep total | awk '{print substr($3, 1, length($3)-1)}')
+          EXPECTED_CODE_COV=75
+          var=$(awk 'BEGIN{ print "'$CODE_COV'"<"'$EXPECTED_CODE_COV'" }')
+          if [ "$var" -eq 1 ];then
+            echo "Your code coverage is too low. Coverage precentage is: $CODE_COV"
+            exit 1
+          else
+            echo "Your code coverage test passed! Coverage precentage is: $CODE_COV"
+            exit 0
+          fi
+
+  lint:
+    name: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Go version
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
+      - run: go version
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@3a919529898de77ec3da873e3063ca4b10e7f5cc #v3
+        with:
+          skip-pkg-cache: true
+          version: v1.54.2
+          args: -c .golangci.yml
+          only-new-issues: true
+  govulncheck:
+    runs-on: ubuntu-latest
+    name: govulncheck
+    steps:
+      - id: govulncheck
+        uses: golang/govulncheck-action@7da72f730e37eeaad891fcff0a532d27ed737cd4 #v1
+        with:
+          go-version-input: ${{ env.GO_VERSION }}
+          go-package: ./...
