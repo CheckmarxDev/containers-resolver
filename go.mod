@@ -266,3 +266,7 @@ require (
 )
 
 replace google.golang.org/protobuf => google.golang.org/protobuf v1.33.0
+
+replace gopkg.in/square/go-jose.v2 => github.com/go-jose/go-jose/v3 v3.0.1
+
+replace github.com/lestrrat-go/jwx => github.com/lestrrat-go/jwx v1.2.29
