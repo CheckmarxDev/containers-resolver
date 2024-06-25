@@ -22,6 +22,14 @@ import (
 	"strings"
 )
 
+var specialExtractors = []string{
+	"java-archive",
+	"maven",
+	"ios",
+	"pod",
+	"cocoapodspkg",
+}
+
 func analyzeImage(l *logger.Logger, imageModel types.ImageModel) (*ContainerResolution, error) {
 
 	l.Debug("image is %s, found in file paths: %s", imageModel.Name, GetImageLocationsPathsString(imageModel))
@@ -90,14 +98,14 @@ func transformSBOMToContainerResolution(l *logger.Logger, s sbom.SBOM, imageSour
 	var ok bool
 
 	if sourceMetadata, ok = s.Source.Metadata.(source.ImageMetadata); !ok {
-		l.Warn("Value is not StereoscopeImageSourceMetadata - can not analyze")
+		l.Warn("Value is not ImageMetadata - can not analyze")
 		return imageResult
 	}
 
 	distro := getDistro(s.Artifacts.LinuxDistribution)
 
 	extractImage(distro, imageSource.ID(), imageModel, sourceMetadata, imageNameAndTag, &imageResult)
-	extractImagePackages(s.Artifacts.Packages, distro, &imageResult)
+	extractImagePackages(l, s.Artifacts.Packages, distro, &imageResult)
 
 	return imageResult
 }
@@ -119,16 +127,18 @@ func extractImage(distro string, imageHash artifact.ID, imageModel types.ImageMo
 	}
 }
 
-func extractImagePackages(packages *pkg.Collection, distro string, result *ContainerResolution) {
+func extractImagePackages(l *logger.Logger, packages *pkg.Collection, distro string, result *ContainerResolution) {
 
 	var containerPackages []ContainerPackage
 
-	for containerPackage := range packages.Enumerate() {
+	syftArtifacts := getSyftArtifactsWithoutUnsupportedTypesDuplications(l, packages)
+
+	for _, containerPackage := range syftArtifacts {
 
 		sourceName, sourceVersion := getPackageRelationships(containerPackage)
 
 		containerPackages = append(containerPackages, ContainerPackage{
-			Name:          containerPackage.Name,
+			Name:          extractPackageName(containerPackage),
 			Version:       containerPackage.Version,
 			Distribution:  distro,
 			Type:          packageTypeToPackageManager(containerPackage.Type),
@@ -142,55 +152,162 @@ func extractImagePackages(packages *pkg.Collection, distro string, result *Conta
 	result.ContainerPackages = containerPackages
 }
 
+func extractPackageName(pack pkg.Package) string {
+	for _, t := range specialExtractors {
+		if strings.ToLower(string(pack.Type)) == t {
+			return extractName(pack.Name, pack.PURL, getGroupId(pack.Metadata))
+		}
+	}
+
+	return pack.Name
+}
+
+func getGroupId(metadata interface{}) string {
+	if javaMetadata, ok := metadata.(pkg.JavaArchive); ok {
+		if javaMetadata.PomProperties == nil {
+			return ""
+		}
+		return javaMetadata.PomProperties.GroupID
+	}
+	return ""
+}
+
+func outputFormat(groupId, packageName string) string {
+	return fmt.Sprintf("%s:%s", groupId, packageName)
+}
+
+func extractName(packageName, purl, groupId string) string {
+	if groupId != "" {
+		if groupId == packageName {
+			return packageName
+		}
+		return outputFormat(groupId, packageName)
+	}
+
+	re := regexp.MustCompile(`/(.*?)/`)
+	groupIdExistsInPurl := re.FindStringSubmatch(purl)
+
+	if len(groupIdExistsInPurl) < 2 {
+		return packageName
+	}
+
+	purlGroupId := groupIdExistsInPurl[1]
+
+	if strings.TrimSpace(purlGroupId) == "" {
+		return packageName
+	}
+
+	if purlGroupId == packageName {
+		return packageName
+	}
+
+	return outputFormat(purlGroupId, packageName)
+}
+
+func getSyftArtifactsWithoutUnsupportedTypesDuplications(l *logger.Logger, packages *pkg.Collection) []pkg.Package {
+	var syftArtifacts []pkg.Package
+
+	groupedPackages := make(map[string][]pkg.Package)
+
+	for pack := range packages.Enumerate() {
+		if pack.Name != "" && pack.Version != "" {
+			key := pack.Name + pack.Version
+			groupedPackages[key] = append(groupedPackages[key], pack)
+		}
+	}
+
+	for _, group := range groupedPackages {
+		if len(group) == 1 {
+			syftArtifacts = append(syftArtifacts, group[0])
+		} else {
+			var packageTypes []pkg.Package
+			for _, p := range group {
+				if packageTypeToPackageManager(p.Type) != string(Unsupported) {
+					packageTypes = append(packageTypes, p)
+				}
+			}
+			if len(packageTypes) > 1 {
+				l.Warn("Found same package id with different types: %v. Selecting first type.", packageTypes)
+			}
+			if len(packageTypes) > 0 {
+				syftArtifacts = append(syftArtifacts, packageTypes[0])
+			}
+		}
+	}
+
+	return syftArtifacts
+}
+
 func getPackageRelationships(containerPackage pkg.Package) (string, string) {
 
 	if apkMeta, ok := containerPackage.Metadata.(pkg.ApkDBEntry); ok {
-		return getApkSource(containerPackage, apkMeta)
+		return getApkSourceName(apkMeta), getApkSourceVersion(containerPackage, apkMeta)
 	}
 	if debMeta, ok := containerPackage.Metadata.(pkg.DpkgDBEntry); ok {
-		return getDebSource(containerPackage, debMeta)
+		return getDebSourceName(debMeta), getDebSourceVersion(containerPackage, debMeta)
 	}
 	if rpmMeta, ok := containerPackage.Metadata.(pkg.RpmDBEntry); ok {
-		return getRpmSource(containerPackage, rpmMeta)
+		return getRpmSourceName(rpmMeta), getRpmSourceVersion(containerPackage, rpmMeta)
 	}
 	return "", ""
 }
 
-func getApkSource(containerPackage pkg.Package, apkMeta pkg.ApkDBEntry) (string, string) {
-	if apkMeta.OriginPackage == "" || apkMeta.OriginPackage == containerPackage.Name {
-		return "", ""
+func getApkSourceName(apkMeta pkg.ApkDBEntry) string {
+	if apkMeta.OriginPackage != "" {
+		return apkMeta.OriginPackage
 	}
-	if apkMeta.Version == "" {
-		return apkMeta.OriginPackage, containerPackage.Version
-	}
-	return apkMeta.OriginPackage, apkMeta.Version
+	return ""
 }
 
-func getDebSource(containerPackage pkg.Package, debMeta pkg.DpkgDBEntry) (string, string) {
-	if debMeta.Source == "" || debMeta.Source == containerPackage.Name {
-		return "", ""
+func getApkSourceVersion(pack pkg.Package, apkMeta pkg.ApkDBEntry) string {
+	if apkMeta.OriginPackage != "" {
+		if apkMeta.Version != "" {
+			return apkMeta.Version
+		}
+		return pack.Version
 	}
-	if debMeta.SourceVersion == "" {
-		return debMeta.Source, containerPackage.Version
-	}
-	return debMeta.Source, debMeta.SourceVersion
+	return ""
 }
 
-func getRpmSource(containerPackage pkg.Package, rpmMeta pkg.RpmDBEntry) (string, string) {
-	if rpmMeta.SourceRpm == "" || rpmMeta.SourceRpm == containerPackage.Name {
-		return "", ""
+func getDebSourceName(debMeta pkg.DpkgDBEntry) string {
+	if debMeta.Source != "" {
+		return debMeta.Source
 	}
-	if rpmMeta.SourceRpm == "" {
-		return rpmMeta.SourceRpm, containerPackage.Version
+	return ""
+}
+
+func getDebSourceVersion(pack pkg.Package, debMeta pkg.DpkgDBEntry) string {
+	if debMeta.Source != "" {
+		if debMeta.SourceVersion != "" {
+			return debMeta.SourceVersion
+		}
+		return pack.Version
 	}
-	return rpmMeta.SourceRpm, rpmMeta.Version
+	return ""
+}
+
+func getRpmSourceName(rpmMeta pkg.RpmDBEntry) string {
+	if rpmMeta.SourceRpm != "" {
+		return rpmMeta.SourceRpm
+	}
+	return ""
+}
+
+func getRpmSourceVersion(pack pkg.Package, rpmMeta pkg.RpmDBEntry) string {
+	if rpmMeta.SourceRpm != "" {
+		if rpmMeta.Version != "" {
+			return rpmMeta.Version
+		}
+		return pack.Version
+	}
+	return ""
 }
 
 func getDistro(release *linux.Release) string {
 	if release == nil || release.ID == "" || release.VersionID == "" {
 		return types.NoFilePath
 	}
-	return fmt.Sprintf("%s:%s", release.ID, trimPatchVersion(release.VersionID))
+	return fmt.Sprintf("%s:%s", release.ID, release.VersionID)
 }
 
 func extractPackageLayerIds(locations file.LocationSet) []string {
@@ -270,16 +387,6 @@ func getSize(layerId string, layers []source.LayerMetadata) int64 {
 		}
 	}
 	return 0
-}
-
-func trimPatchVersion(versionID string) string {
-	re := regexp.MustCompile(`^(\d+\.\d+)`)
-	matches := re.FindStringSubmatch(versionID)
-
-	if len(matches) > 1 {
-		return matches[1]
-	}
-	return versionID
 }
 
 func getImageLocations(imageLocations []types.ImageLocation) []ImageLocation {
