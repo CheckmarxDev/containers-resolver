@@ -154,7 +154,7 @@ func extractImagePackages(l *logger.Logger, packages *pkg.Collection, distro str
 
 func extractPackageName(pack pkg.Package) string {
 	for _, t := range specialExtractors {
-		if strings.ToLower(pack.Type.PackageURLType()) == t {
+		if strings.ToLower(string(pack.Type)) == t {
 			return extractName(pack.Name, pack.PURL, getGroupId(pack.Metadata))
 		}
 	}
