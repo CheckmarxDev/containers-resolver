@@ -27,7 +27,7 @@ func TestSyftExtractor(t *testing.T) {
 			Packages       int
 			ImageLocations int
 		}{
-			"rabbitmq:3":               {Layers: 11, Packages: 107, ImageLocations: 1},
+			"rabbitmq:3":               {Layers: 9, Packages: 107, ImageLocations: 1},
 			"golang:1.21.5-alpine3.18": {Layers: 4, Packages: 56, ImageLocations: 1},
 		}
 
@@ -51,7 +51,7 @@ func TestSyftExtractor(t *testing.T) {
 			Packages       int
 			ImageLocations int
 		}{
-			"rabbitmq:3": {Layers: 11, Packages: 107, ImageLocations: 2},
+			"rabbitmq:3": {Layers: 9, Packages: 107, ImageLocations: 2},
 		}
 
 		checkResults(t, resolutions, expectedValues)
@@ -113,7 +113,7 @@ func TestSyftExtractor(t *testing.T) {
 			Packages       int
 			ImageLocations int
 		}{
-			"rabbitmq:3": {Layers: 11, Packages: 107, ImageLocations: 1},
+			"rabbitmq:3": {Layers: 9, Packages: 107, ImageLocations: 1},
 		}
 
 		checkResults(t, resolutions, expectedValues)

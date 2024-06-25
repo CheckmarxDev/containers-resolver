@@ -23,14 +23,14 @@ func Resolve(scanPath string, resolutionFolderPath string, images []string, isDe
 	// 0. validate input
 	err := validate(resolutionFolderPath)
 	if err != nil {
-		resolverLogger.Error("input is not valid. err: %+v", err)
+		resolverLogger.Error("input is not valid. err: %v", err)
 		return err
 	}
 
 	//1. extract files
 	filesWithImages, outputPath, err := imagesExtractor.ExtractFiles(scanPath)
 	if err != nil {
-		resolverLogger.Error("Could not extract files err: %+v", err)
+		resolverLogger.Error("Could not extract files. err: %v", err)
 		return err
 	}
 
@@ -44,20 +44,20 @@ func Resolve(scanPath string, resolutionFolderPath string, images []string, isDe
 	//4. get images resolution
 	resolutionResult, err := syftExtractor.AnalyzeImages(imagesToAnalyze)
 	if err != nil {
-		resolverLogger.Error("Could not analyze images err: %+v", err)
+		resolverLogger.Error("Could not analyze images. err: %v", err)
 		return err
 	}
 
 	//5. save to resolution file path
 	err = imagesExtractor.SaveObjectToFile(resolutionFolderPath, resolutionResult)
 	if err != nil {
-		resolverLogger.Error("Could not save resolution result err: %+v", err)
+		resolverLogger.Error("Could not save resolution result. err: %v", err)
 		return err
 	}
 	//6. cleanup files generated folder
 	err = cleanup(resolutionFolderPath, outputPath)
 	if err != nil {
-		resolverLogger.Error("Could not cleanup resources err: %+v", err)
+		resolverLogger.Error("Could not cleanup resources. err: %v", err)
 		return err
 	}
 	return nil

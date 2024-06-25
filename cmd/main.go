@@ -5,12 +5,12 @@ import (
 	"log"
 )
 
-const defaultImage = "rabbitmq:3"
-const defaultImage2 = "golang:1.21.5-alpine3.18"
+const defaultImage = "manuelbcd/vulnapp:latest"
+const defaultImage2 = "library/debian:10"
 
 func main() {
 
-	scanPath := "./test_files/withDockerInZip.zip"
+	scanPath := "./test_files/empty-folder"
 	//scanPath := "./test_files/withHelmInZip.zip"
 	//scanPath := "./test_files/withDockerInTar.tar.gz"
 	//scanPath := "path-to-local-dir"

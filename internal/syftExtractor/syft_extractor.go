@@ -21,11 +21,11 @@ func (se *SyftExtractor) AnalyzeImages(images []types.ImageModel) ([]*ContainerR
 
 		tmpResolution, err := analyzeImage(se.Logger, imageModel)
 		if err != nil {
-			se.Error("Could not analyze image: %s err: %+v", imageModel.Name, err)
+			se.Error("Could not analyze image: %s. err: %v", imageModel.Name, err)
 			continue
 		}
 		containerResolution = append(containerResolution, tmpResolution)
-		se.Info("successfully analyzed image: %s", imageModel.Name)
+		se.Info("successfully analyzed image: %s, found %d packages", imageModel.Name, len(tmpResolution.ContainerPackages))
 	}
 
 	if containerResolution == nil || len(containerResolution) < 1 {

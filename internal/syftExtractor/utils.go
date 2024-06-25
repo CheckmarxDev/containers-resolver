@@ -6,7 +6,8 @@ import (
 	"fmt"
 	"github.com/CheckmarxDev/containers-resolver/internal/logger"
 	"github.com/CheckmarxDev/containers-resolver/internal/types"
-	"github.com/anchore/stereoscope/pkg/image"
+	"github.com/anchore/stereoscope"
+	"github.com/anchore/stereoscope/pkg/image/oci"
 	"github.com/anchore/syft/syft"
 	"github.com/anchore/syft/syft/artifact"
 	"github.com/anchore/syft/syft/file"
@@ -16,6 +17,7 @@ import (
 	"github.com/anchore/syft/syft/pkg"
 	"github.com/anchore/syft/syft/sbom"
 	"github.com/anchore/syft/syft/source"
+	"github.com/anchore/syft/syft/source/stereoscopesource"
 	"regexp"
 	"strings"
 )
@@ -34,28 +36,23 @@ func analyzeImage(l *logger.Logger, imageModel types.ImageModel) (*ContainerReso
 	return &result, nil
 }
 
-func analyzeImageUsingSyft(l *logger.Logger, imageId string) (*source.StereoscopeImageSource, *sbom.SBOM, error) {
-	platform, err := image.NewPlatform("linux/amd64")
+func analyzeImageUsingSyft(l *logger.Logger, imageId string) (source.Source, *sbom.SBOM, error) {
+
+	img, err := stereoscope.GetImageFromSource(context.Background(), imageId, oci.Registry, stereoscope.WithPlatform("linux/amd64"))
 	if err != nil {
-		l.Error("could not create platform object", err)
+		l.Error("Could not create image source object. err: %v", err)
 		return nil, nil, err
 	}
 
-	imageSource, err := source.NewFromStereoscopeImage(
-		source.StereoscopeImageConfig{
-			Reference: imageId,
-			From:      image.DockerDaemonSource,
-			Platform:  platform,
-		},
-	)
+	imageSource := stereoscopesource.New(img, stereoscopesource.ImageConfig{Reference: imageId})
 	if err != nil {
-		l.Error("Could not pull image: %s. err: %+v", imageId, err)
+		l.Error("Could not pull image: %s. err: %v", imageId, err)
 		return nil, nil, err
 	}
 
 	s, err := getSBOM(imageSource, true)
 	if err != nil {
-		l.Error("Could get image SBOM. image: %s. err: %+v", imageId, err)
+		l.Error("Could get image SBOM. image: %s. err: %v", imageId, err)
 		return nil, nil, err
 	}
 	return imageSource, &s, nil
@@ -81,7 +78,7 @@ func formatSBOM(s sbom.SBOM) []byte {
 	return bytes
 }
 
-func transformSBOMToContainerResolution(l *logger.Logger, s sbom.SBOM, imageSource *source.StereoscopeImageSource, imageModel types.ImageModel) ContainerResolution {
+func transformSBOMToContainerResolution(l *logger.Logger, s sbom.SBOM, imageSource source.Source, imageModel types.ImageModel) ContainerResolution {
 
 	imageNameAndTag := strings.Split(imageModel.Name, ":")
 
@@ -89,10 +86,10 @@ func transformSBOMToContainerResolution(l *logger.Logger, s sbom.SBOM, imageSour
 		ContainerImage:    ContainerImage{},
 		ContainerPackages: []ContainerPackage{},
 	}
-	var sourceMetadata source.StereoscopeImageSourceMetadata
+	var sourceMetadata source.ImageMetadata
 	var ok bool
 
-	if sourceMetadata, ok = s.Source.Metadata.(source.StereoscopeImageSourceMetadata); !ok {
+	if sourceMetadata, ok = s.Source.Metadata.(source.ImageMetadata); !ok {
 		l.Warn("Value is not StereoscopeImageSourceMetadata - can not analyze")
 		return imageResult
 	}
@@ -105,7 +102,7 @@ func transformSBOMToContainerResolution(l *logger.Logger, s sbom.SBOM, imageSour
 	return imageResult
 }
 
-func extractImage(distro string, imageHash artifact.ID, imageModel types.ImageModel, sourceMetadata source.StereoscopeImageSourceMetadata, imageNameAndTag []string, result *ContainerResolution) {
+func extractImage(distro string, imageHash artifact.ID, imageModel types.ImageModel, sourceMetadata source.ImageMetadata, imageNameAndTag []string, result *ContainerResolution) {
 
 	history := extractHistory(sourceMetadata)
 	layerIds := extractLayerIds(history)
@@ -224,7 +221,7 @@ func extractLayerIds(layers []Layer) []string {
 	return layerIds
 }
 
-func extractHistory(sourceMetadata source.StereoscopeImageSourceMetadata) []Layer {
+func extractHistory(sourceMetadata source.ImageMetadata) []Layer {
 	imageConfig := decodeBase64ToJson(sourceMetadata.RawConfig)
 	j := 0
 
@@ -266,7 +263,7 @@ func removeSha256(str string) string {
 	return regexp.MustCompile(`^sha256:`).ReplaceAllString(str, "")
 }
 
-func getSize(layerId string, layers []source.StereoscopeLayerMetadata) int64 {
+func getSize(layerId string, layers []source.LayerMetadata) int64 {
 	for _, layer := range layers {
 		if removeSha256(layer.Digest) == layerId {
 			return layer.Size

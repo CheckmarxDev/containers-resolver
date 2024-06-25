@@ -27,13 +27,13 @@ func extractTar(l *logger.Logger, tarPath string) (string, error) {
 
 	gzr, err := gzip.NewReader(r)
 	if err != nil {
-		l.Error("Could not create gzip reader `%s`", extractDir, err)
+		l.Error("Could not create gzip reader `%s`. err: %v", extractDir, err)
 		return "", err
 	}
 	defer func(gzr *gzip.Reader) {
 		err = gzr.Close()
 		if err != nil {
-			l.Warn("error whole closing gzip reader", err)
+			l.Warn("error whole closing gzip reader. err: %v", err)
 		}
 	}(gzr)
 
