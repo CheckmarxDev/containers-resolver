@@ -9,7 +9,6 @@ import (
 	"github.com/anchore/stereoscope"
 	"github.com/anchore/stereoscope/pkg/image/oci"
 	"github.com/anchore/syft/syft"
-	"github.com/anchore/syft/syft/artifact"
 	"github.com/anchore/syft/syft/file"
 	"github.com/anchore/syft/syft/format"
 	"github.com/anchore/syft/syft/format/syftjson"
@@ -104,13 +103,13 @@ func transformSBOMToContainerResolution(l *logger.Logger, s sbom.SBOM, imageSour
 
 	distro := getDistro(s.Artifacts.LinuxDistribution)
 
-	extractImage(distro, imageSource.ID(), imageModel, sourceMetadata, imageNameAndTag, &imageResult)
+	extractImage(distro, imageModel, sourceMetadata, imageNameAndTag, &imageResult)
 	extractImagePackages(l, s.Artifacts.Packages, distro, &imageResult)
 
 	return imageResult
 }
 
-func extractImage(distro string, imageHash artifact.ID, imageModel types.ImageModel, sourceMetadata source.ImageMetadata, imageNameAndTag []string, result *ContainerResolution) {
+func extractImage(distro string, imageModel types.ImageModel, sourceMetadata source.ImageMetadata, imageNameAndTag []string, result *ContainerResolution) {
 
 	history := extractHistory(sourceMetadata)
 	layerIds := extractLayerIds(history)
@@ -119,7 +118,7 @@ func extractImage(distro string, imageHash artifact.ID, imageModel types.ImageMo
 		ImageName:      imageNameAndTag[0],
 		ImageTag:       imageNameAndTag[1],
 		Distribution:   distro,
-		ImageHash:      string(imageHash),
+		ImageHash:      sourceMetadata.ID,
 		ImageId:        imageModel.Name,
 		Layers:         layerIds,
 		History:        history,
