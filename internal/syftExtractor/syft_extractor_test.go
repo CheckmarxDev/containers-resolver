@@ -21,7 +21,6 @@ func TestSyftExtractor(t *testing.T) {
 		if err != nil {
 			t.Errorf("Error analyzing images: %v", err)
 		}
-
 		expectedValues := map[string]struct {
 			Layers         int
 			Packages       int
