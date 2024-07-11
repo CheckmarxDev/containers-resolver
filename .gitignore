@@ -49,3 +49,15 @@ override.tf.json
 # Include tfplan files to ignore the plan output of command: terraform plan -out=tfplan
 # Folder view configuration files
 .DS_Store
+
+# .gitignore file
+
+# Ignore all files in the build directory
+/build/
+
+# Ignore all .log files
+*.log
+
+# Ignore the file secret.txt
+secret.txt
+
