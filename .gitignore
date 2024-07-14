@@ -61,3 +61,5 @@ override.tf.json
 # Ignore the file secret.txt
 secret.txt
 
+# Ignore all files in pkg/mod
+pkg/mod/
