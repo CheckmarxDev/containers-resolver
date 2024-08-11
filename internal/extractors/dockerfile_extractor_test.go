@@ -52,7 +52,7 @@ func TestExtractImagesFromDockerfiles_NoImagesFound(t *testing.T) {
 	l := logger.NewLogger(false)
 
 	filePaths := []types.FilePath{
-		{FullPath: "../../test_files/imageExtraction/dockerfiles/Dockerfile-3", RelativePath: "Dockerfile-3"}, // Empty Dockerfile
+		{FullPath: "../../test_files/imageExtraction/dockerfiles/Dockerfile-4", RelativePath: "Dockerfile-3"}, // Empty Dockerfile
 	}
 
 	images, err := ExtractImagesFromDockerfiles(l, filePaths)
