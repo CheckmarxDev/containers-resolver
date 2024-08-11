@@ -29,8 +29,8 @@ func ExtractImagesFromDockerfiles(logger *logger.Logger, filePaths []types.FileP
 
 func extractImagesFromDockerfile(logger *logger.Logger, filePath types.FilePath) ([]types.ImageModel, error) {
 	var imageNames []types.ImageModel
-
-	aliases := make(map[string]string) // Map to store aliases and their corresponding real image names
+	aliases := make(map[string]string)    // Map to store aliases and their corresponding real image names
+	argsAndEnv := make(map[string]string) // Map to store ARG and ENV values
 
 	file, err := os.Open(filePath.FullPath)
 	if err != nil {
@@ -47,25 +47,48 @@ func extractImagesFromDockerfile(logger *logger.Logger, filePath types.FilePath)
 	for scanner.Scan() {
 		line := scanner.Text()
 
+		// Check if the line contains an ARG or ENV definition
+		if match := regexp.MustCompile(`^\s*(ARG|ENV)\s+(\w+)=([^\s]+)`).FindStringSubmatch(line); match != nil {
+			varName := match[2]
+			varValue := match[3]
+			argsAndEnv[varName] = varValue
+		}
+
+		// Inject ARG and ENV values into placeholders
+		for varName, varValue := range argsAndEnv {
+			placeholder := fmt.Sprintf("${%s}", varName)
+			line = strings.ReplaceAll(line, placeholder, varValue)
+		}
+
 		// Check if the line defines an alias
-		if match := regexp.MustCompile(`^\s*FROM\s+([\w./-]+(?::[\w.-]+)?)(?:\s+AS\s+(\w+))?`).FindStringSubmatch(line); match != nil {
+		if match := regexp.MustCompile(`^\s*FROM\s+(?:--platform=[^\s]+\s+)?([\w./-]+(?::[\w.-]+)?)(?:\s+AS\s+(\w+))?`).FindStringSubmatch(line); match != nil {
 			imageName := match[1]
 			alias := match[2]
+
+			// Ignore "scratch" image
+			if imageName == "scratch" {
+				continue
+			}
+
 			if alias != "" {
-				// Check if the alias points to another alias
 				realName := resolveAlias(alias, aliases)
 				if realName != "" {
-					aliases[alias] = realName // Store the alias and its corresponding real image name
+					aliases[alias] = realName
 				} else {
-					aliases[alias] = imageName // Store the alias and its corresponding real image name
+					aliases[alias] = imageName
 				}
 			}
 		}
 
 		// Check if the line contains an image reference
-		if match := regexp.MustCompile(`\bFROM\s+([\w./-]+)(?::([\w.-]+))?\b`).FindStringSubmatch(line); match != nil {
+		if match := regexp.MustCompile(`\bFROM\s+(?:--platform=[^\s]+\s+)?([\w./-]+)(?::([\w.-]+))?\b`).FindStringSubmatch(line); match != nil {
 			imageName := match[1]
 			tag := match[2]
+
+			// Ignore "scratch" image
+			if imageName == "scratch" {
+				continue
+			}
 
 			if tag == "" {
 				tag = "latest"
