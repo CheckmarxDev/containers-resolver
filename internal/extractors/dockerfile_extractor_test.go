@@ -12,6 +12,7 @@ func TestExtractImagesFromDockerfiles(t *testing.T) {
 	filePaths := []types.FilePath{
 		{FullPath: "../../test_files/imageExtraction/dockerfiles/Dockerfile", RelativePath: "Dockerfile"},
 		{FullPath: "../../test_files/imageExtraction/dockerfiles/Dockerfile-2", RelativePath: "Dockerfile-2"},
+		{FullPath: "../../test_files/imageExtraction/dockerfiles/Dockerfile-3", RelativePath: "Dockerfile-3"},
 	}
 
 	images, err := ExtractImagesFromDockerfiles(l, filePaths)
@@ -24,6 +25,9 @@ func TestExtractImagesFromDockerfiles(t *testing.T) {
 		"mcr.microsoft.com/dotnet/aspnet:6.0": {Origin: types.DockerFileOrigin, Path: "Dockerfile"},
 		"nginx:latest":                        {Origin: types.DockerFileOrigin, Path: "Dockerfile-2"},
 		"mcr.microsoft.com/dotnet/aspnet:4.0": {Origin: types.DockerFileOrigin, Path: "Dockerfile-2"},
+		"tonistiigi/xx:1.2.1":                 {Origin: types.DockerFileOrigin, Path: "Dockerfile-3"},
+		"golang:1.20.8-alpine3.18":            {Origin: types.DockerFileOrigin, Path: "Dockerfile-3"},
+		"alpine:3.18":                         {Origin: types.DockerFileOrigin, Path: "Dockerfile-3"},
 	}
 
 	checkResult(t, images, expectedImages)
@@ -48,7 +52,7 @@ func TestExtractImagesFromDockerfiles_NoImagesFound(t *testing.T) {
 	l := logger.NewLogger(false)
 
 	filePaths := []types.FilePath{
-		{FullPath: "../../test_files/imageExtraction/dockerfiles/Dockerfile-3", RelativePath: "Dockerfile-3"}, // Empty Dockerfile
+		{FullPath: "../../test_files/imageExtraction/dockerfiles/Dockerfile-4", RelativePath: "Dockerfile-3"}, // Empty Dockerfile
 	}
 
 	images, err := ExtractImagesFromDockerfiles(l, filePaths)

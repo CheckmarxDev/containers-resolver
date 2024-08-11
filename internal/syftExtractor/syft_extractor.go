@@ -3,6 +3,7 @@ package syftExtractor
 import (
 	"github.com/CheckmarxDev/containers-resolver/internal/logger"
 	"github.com/CheckmarxDev/containers-resolver/internal/types"
+	"strings"
 )
 
 type SyftExtractor struct {
@@ -25,7 +26,9 @@ func (se *SyftExtractor) AnalyzeImages(images []types.ImageModel) ([]*ContainerR
 			continue
 		}
 		containerResolution = append(containerResolution, tmpResolution)
-		se.Info("successfully analyzed image: %s, found %d packages", imageModel.Name, len(tmpResolution.ContainerPackages))
+		se.Info("successfully analyzed image: %s, found %d packages. image paths: %s", imageModel.Name,
+			len(tmpResolution.ContainerPackages), getPaths(imageModel.ImageLocations))
+
 	}
 
 	if containerResolution == nil || len(containerResolution) < 1 {
@@ -33,4 +36,12 @@ func (se *SyftExtractor) AnalyzeImages(images []types.ImageModel) ([]*ContainerR
 	}
 
 	return containerResolution, nil
+}
+
+func getPaths(locations []types.ImageLocation) string {
+	var paths []string
+	for _, location := range locations {
+		paths = append(paths, location.Path)
+	}
+	return strings.Join(paths, ",")
 }
