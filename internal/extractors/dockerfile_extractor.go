@@ -142,7 +142,7 @@ func resolveEnvVariables(dockerfilePath string, envFiles map[string]map[string]s
 	// Iterate over the hierarchy and merge environment variables
 	dirs := getDirsForHierarchy(dockerfilePath)
 	for _, dir := range dirs {
-		if envVars, ok := envFiles[filepath.Join(dir, ".env_cxcontainers")]; ok {
+		if envVars, ok := envFiles[dir]; ok {
 			for k, v := range envVars {
 				if _, exists := resolvedVars[k]; !exists {
 					resolvedVars[k] = v
@@ -150,13 +150,13 @@ func resolveEnvVariables(dockerfilePath string, envFiles map[string]map[string]s
 			}
 		}
 
-		if envVars, ok := envFiles[filepath.Join(dir, ".env")]; ok {
-			for k, v := range envVars {
-				if _, exists := resolvedVars[k]; !exists {
-					resolvedVars[k] = v
-				}
-			}
-		}
+		//if envVars, ok := envFiles[filepath.Join(dir, ".env")]; ok {
+		//	for k, v := range envVars {
+		//		if _, exists := resolvedVars[k]; !exists {
+		//			resolvedVars[k] = v
+		//		}
+		//	}
+		//}
 	}
 
 	return resolvedVars

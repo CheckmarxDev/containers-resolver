@@ -110,10 +110,7 @@ func TestExtractImagesFromDockerfiles_WithEnvFiles(t *testing.T) {
 	}
 
 	envVars := map[string]map[string]string{
-		"../../test_files/imageExtraction/dockerfiles/.env": {
-			"MY_TAG": "1.20.9",
-		},
-		"../../test_files/imageExtraction/dockerfiles/.env_cxcontainers": {
+		"../../test_files/imageExtraction/dockerfiles": {
 			"MY_IMAGE": "golang",
 			"MY_TAG":   "1.20.8",
 		},
@@ -139,10 +136,10 @@ func TestExtractImagesFromDockerfiles_WithMultipleEnvFiles(t *testing.T) {
 	}
 
 	envVars := map[string]map[string]string{
-		"../../test_files/imageExtraction/dockerfiles/.env": {
+		"../../test_files/imageExtraction/dockerfiles": {
 			"MY_TAG": "3.18",
 		},
-		"../../test_files/imageExtraction/.env": {
+		"../../test_files/imageExtraction": {
 			"MY_IMAGE": "alpine",
 		},
 	}
