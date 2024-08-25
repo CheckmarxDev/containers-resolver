@@ -1,9 +1,10 @@
 package extractors
 
 import (
+	"testing"
+
 	"github.com/CheckmarxDev/containers-resolver/internal/logger"
 	"github.com/CheckmarxDev/containers-resolver/internal/types"
-	"testing"
 )
 
 func TestExtractImagesFromDockerfiles(t *testing.T) {
@@ -15,7 +16,17 @@ func TestExtractImagesFromDockerfiles(t *testing.T) {
 		{FullPath: "../../test_files/imageExtraction/dockerfiles/Dockerfile-3", RelativePath: "Dockerfile-3"},
 	}
 
-	images, err := ExtractImagesFromDockerfiles(l, filePaths)
+	envVars := map[string]map[string]string{
+		"../../test_files/imageExtraction/dockerfiles": {
+			"MY_ARG":     "6.0",
+			"MY_ASPNET":  "aspnet",
+			"MY_TAG":     "latest",
+			"GO_VERSION": "1.20.8",
+			"ALPINE_VER": "3.18",
+		},
+	}
+
+	images, err := ExtractImagesFromDockerfiles(l, filePaths, envVars)
 	if err != nil {
 		t.Errorf("Error extracting images: %v", err)
 	}
@@ -37,8 +48,9 @@ func TestExtractImagesFromDockerfiles_NoFilesFound(t *testing.T) {
 	l := logger.NewLogger(false)
 
 	filePaths := []types.FilePath{} // No files provided
+	envVars := map[string]map[string]string{}
 
-	images, err := ExtractImagesFromDockerfiles(l, filePaths)
+	images, err := ExtractImagesFromDockerfiles(l, filePaths, envVars)
 	if err != nil {
 		t.Errorf("Error extracting images: %v", err)
 	}
@@ -52,10 +64,12 @@ func TestExtractImagesFromDockerfiles_NoImagesFound(t *testing.T) {
 	l := logger.NewLogger(false)
 
 	filePaths := []types.FilePath{
-		{FullPath: "../../test_files/imageExtraction/dockerfiles/Dockerfile-4", RelativePath: "Dockerfile-3"}, // Empty Dockerfile
+		{FullPath: "../../test_files/imageExtraction/dockerfiles/Dockerfile-4", RelativePath: "Dockerfile-4"}, // Empty Dockerfile
 	}
 
-	images, err := ExtractImagesFromDockerfiles(l, filePaths)
+	envVars := map[string]map[string]string{}
+
+	images, err := ExtractImagesFromDockerfiles(l, filePaths, envVars)
 	if err != nil {
 		t.Errorf("Error extracting images: %v", err)
 	}
@@ -73,7 +87,9 @@ func TestExtractImagesFromDockerfiles_OneValidOneInvalid(t *testing.T) {
 		{FullPath: "../../test_files/imageExtraction/dockerfiles/InvalidDockerfile", RelativePath: "InvalidDockerfile"},
 	}
 
-	images, err := ExtractImagesFromDockerfiles(l, filePaths)
+	envVars := map[string]map[string]string{}
+
+	images, err := ExtractImagesFromDockerfiles(l, filePaths, envVars)
 	if err != nil {
 		t.Errorf("Error extracting images: %v", err)
 	}
@@ -81,6 +97,63 @@ func TestExtractImagesFromDockerfiles_OneValidOneInvalid(t *testing.T) {
 	expectedImages := map[string]types.ImageLocation{
 		"mcr.microsoft.com/dotnet/sdk:6.0":    {Origin: types.DockerFileOrigin, Path: "Dockerfile"},
 		"mcr.microsoft.com/dotnet/aspnet:6.0": {Origin: types.DockerFileOrigin, Path: "Dockerfile"},
+	}
+
+	checkResult(t, images, expectedImages)
+}
+
+func TestExtractImagesFromDockerfiles_WithEnvFiles(t *testing.T) {
+	l := logger.NewLogger(false)
+
+	filePaths := []types.FilePath{
+		{FullPath: "../../test_files/imageExtraction/dockerfiles/Dockerfile-5", RelativePath: "Dockerfile-5"},
+	}
+
+	envVars := map[string]map[string]string{
+		"../../test_files/imageExtraction/dockerfiles/.env": {
+			"MY_TAG": "1.20.9",
+		},
+		"../../test_files/imageExtraction/dockerfiles/.env_cxcontainers": {
+			"MY_IMAGE": "golang",
+			"MY_TAG":   "1.20.8",
+		},
+	}
+
+	images, err := ExtractImagesFromDockerfiles(l, filePaths, envVars)
+	if err != nil {
+		t.Errorf("Error extracting images: %v", err)
+	}
+
+	expectedImages := map[string]types.ImageLocation{
+		"golang:1.20.8": {Origin: types.DockerFileOrigin, Path: "Dockerfile-5"},
+	}
+
+	checkResult(t, images, expectedImages)
+}
+
+func TestExtractImagesFromDockerfiles_WithMultipleEnvFiles(t *testing.T) {
+	l := logger.NewLogger(false)
+
+	filePaths := []types.FilePath{
+		{FullPath: "../../test_files/imageExtraction/dockerfiles/Dockerfile-5", RelativePath: "Dockerfile-5"},
+	}
+
+	envVars := map[string]map[string]string{
+		"../../test_files/imageExtraction/dockerfiles/.env": {
+			"MY_TAG": "3.18",
+		},
+		"../../test_files/imageExtraction/.env": {
+			"MY_IMAGE": "alpine",
+		},
+	}
+
+	images, err := ExtractImagesFromDockerfiles(l, filePaths, envVars)
+	if err != nil {
+		t.Errorf("Error extracting images: %v", err)
+	}
+
+	expectedImages := map[string]types.ImageLocation{
+		"alpine:3.18": {Origin: types.DockerFileOrigin, Path: "Dockerfile-5"},
 	}
 
 	checkResult(t, images, expectedImages)

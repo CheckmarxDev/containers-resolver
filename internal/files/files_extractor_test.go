@@ -152,7 +152,7 @@ func TestExtractAndMergeImagesFromFiles(t *testing.T) {
 	for _, scenario := range scenarios {
 		t.Run(scenario.Name, func(t *testing.T) {
 			// Run the function
-			result, err := extractor.ExtractAndMergeImagesFromFiles(scenario.Files, scenario.UserInput)
+			result, err := extractor.ExtractAndMergeImagesFromFiles(scenario.Files, scenario.UserInput, nil)
 
 			// Check for errors
 			if scenario.ExpectedErrorMsg != "" {
@@ -270,7 +270,7 @@ func TestExtractFiles(t *testing.T) {
 	for _, scenario := range scenarios {
 		t.Run(scenario.Name, func(t *testing.T) {
 			// Run the function
-			files, _, err := extractor.ExtractFiles(scenario.InputPath)
+			files, _, _, err := extractor.ExtractFiles(scenario.InputPath)
 
 			// Check for errors
 			if scenario.ExpectedErrString != "" {
