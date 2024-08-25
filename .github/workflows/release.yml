@@ -1,0 +1,44 @@
+name: Release Containers resolver Go module new version
+
+on:
+  pull_request:
+    types:
+    - closed
+    branches:
+    - main
+
+jobs:
+  tag-and-release:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - name: Git auth config
+        run: |
+          git config --local user.email "cx-ast-ci@checkmarx.com"
+          git config --local user.name "${{ secrets.GH_USERNAME}}"
+      - name: Get the latest tag
+        id: get_tag
+        run: echo ::set-output name=tag::$(git describe --tags `git rev-list --tags --max-count=1`)
+      - name: Get the PR Title
+        id: get_pr_title
+        run: echo ::set-output name=pr_title::${{ github.event.pull_request.title }}
+      - name: Bump Patch Version
+        id: bump
+        uses: cbrgm/semver-bump-action@main
+        with:
+          current-version: ${{ steps.get_tag.outputs.tag }}
+          bump-level: patch
+      - name: Create a new tag
+        run: |
+          git tag ${{ steps.bump.outputs.new_version }} -m "${{ steps.get_pr_title.outputs.pr_title }}"
+          git push origin ${{ steps.bump.outputs.new_version }}
+      - name: Create release from tag
+        uses: actions/create-release@v1
+        with:
+          tag_name: ${{ steps.bump.outputs.new_version }}
+          release_name: ${{ steps.bump.outputs.new_version }}
+          body: ${{ steps.get_pr_title.outputs.pr_title }}
+          draft: false
+          prerelease: false
