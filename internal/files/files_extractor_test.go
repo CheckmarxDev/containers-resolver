@@ -216,6 +216,8 @@ func TestExtractFiles(t *testing.T) {
 					{FullPath: "../../test_files/imageExtraction/dockerfiles/Dockerfile", RelativePath: "dockerfiles/Dockerfile"},
 					{FullPath: "../../test_files/imageExtraction/dockerfiles/Dockerfile-2", RelativePath: "dockerfiles/Dockerfile-2"},
 					{FullPath: "../../test_files/imageExtraction/dockerfiles/Dockerfile-3", RelativePath: "dockerfiles/Dockerfile-3"},
+					{FullPath: "../../test_files/imageExtraction/dockerfiles/Dockerfile-4", RelativePath: "dockerfiles/Dockerfile-4"},
+					{FullPath: "../../test_files/imageExtraction/dockerfiles/Dockerfile-5", RelativePath: "dockerfiles/Dockerfile-5"},
 				},
 				DockerCompose: []types.FilePath{
 					{FullPath: "../../test_files/imageExtraction/dockerCompose/docker-compose.yaml", RelativePath: "dockerCompose/docker-compose.yaml"},
