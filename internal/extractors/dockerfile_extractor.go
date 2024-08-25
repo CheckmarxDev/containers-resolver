@@ -115,7 +115,6 @@ func extractImagesFromDockerfile(logger *logger.Logger, filePath types.FilePath,
 }
 
 func replacePlaceholders(line string, envVars, argsAndEnv map[string]string) string {
-	// Replace ${PLACE} style placeholders first
 	for varName, varValue := range envVars {
 		placeholderWithBraces := fmt.Sprintf("${%s}", varName)
 		line = strings.ReplaceAll(line, placeholderWithBraces, varValue)
@@ -124,7 +123,6 @@ func replacePlaceholders(line string, envVars, argsAndEnv map[string]string) str
 		line = strings.ReplaceAll(line, placeholderWithoutBraces, varValue)
 	}
 
-	// Replace ${PLACE} and $PLACE style placeholders for argsAndEnv as well
 	for varName, varValue := range argsAndEnv {
 		placeholderWithBraces := fmt.Sprintf("${%s}", varName)
 		line = strings.ReplaceAll(line, placeholderWithBraces, varValue)
@@ -139,7 +137,6 @@ func replacePlaceholders(line string, envVars, argsAndEnv map[string]string) str
 func resolveEnvVariables(dockerfilePath string, envFiles map[string]map[string]string) map[string]string {
 	resolvedVars := make(map[string]string)
 
-	// Iterate over the hierarchy and merge environment variables
 	dirs := getDirsForHierarchy(dockerfilePath)
 	for _, dir := range dirs {
 		if envVars, ok := envFiles[dir]; ok {
@@ -149,14 +146,6 @@ func resolveEnvVariables(dockerfilePath string, envFiles map[string]map[string]s
 				}
 			}
 		}
-
-		//if envVars, ok := envFiles[filepath.Join(dir, ".env")]; ok {
-		//	for k, v := range envVars {
-		//		if _, exists := resolvedVars[k]; !exists {
-		//			resolvedVars[k] = v
-		//		}
-		//	}
-		//}
 	}
 
 	return resolvedVars

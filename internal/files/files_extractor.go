@@ -71,7 +71,6 @@ func (fe *ImagesExtractor) ExtractFiles(scanPath string) (types.FileImages, map[
 			})
 		}
 
-		// Check for .env or .env_cxcontainers files
 		if strings.HasSuffix(info.Name(), ".env") || strings.HasSuffix(info.Name(), ".env_cxcontainers") {
 			dir := filepath.Dir(path)
 			envFiles[dir] = append(envFiles[dir], path)
