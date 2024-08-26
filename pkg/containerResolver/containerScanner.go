@@ -28,14 +28,14 @@ func Resolve(scanPath string, resolutionFolderPath string, images []string, isDe
 	}
 
 	//1. extract files
-	filesWithImages, outputPath, err := imagesExtractor.ExtractFiles(scanPath)
+	filesWithImages, settingsFiles, outputPath, err := imagesExtractor.ExtractFiles(scanPath)
 	if err != nil {
 		resolverLogger.Error("Could not extract files. err: %v", err)
 		return err
 	}
 
 	//2. extract images from files
-	imagesToAnalyze, err := imagesExtractor.ExtractAndMergeImagesFromFiles(filesWithImages, toImageModels(images))
+	imagesToAnalyze, err := imagesExtractor.ExtractAndMergeImagesFromFiles(filesWithImages, toImageModels(images), settingsFiles)
 	if err != nil {
 		resolverLogger.Error("Could not extract images from files err: %+v", err)
 		return err

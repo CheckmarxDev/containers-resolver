@@ -1,20 +1,23 @@
 package files
 
 import (
+	"bufio"
 	"encoding/json"
 	"github.com/CheckmarxDev/containers-resolver/internal/extractors"
 	"github.com/CheckmarxDev/containers-resolver/internal/logger"
 	"github.com/CheckmarxDev/containers-resolver/internal/types"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 type ImagesExtractor struct {
 	*logger.Logger
 }
 
-func (fe *ImagesExtractor) ExtractAndMergeImagesFromFiles(files types.FileImages, images []types.ImageModel) ([]types.ImageModel, error) {
-	dockerfileImages, err := extractors.ExtractImagesFromDockerfiles(fe.Logger, files.Dockerfile)
+func (fe *ImagesExtractor) ExtractAndMergeImagesFromFiles(files types.FileImages, images []types.ImageModel,
+	settingsFiles map[string]map[string]string) ([]types.ImageModel, error) {
+	dockerfileImages, err := extractors.ExtractImagesFromDockerfiles(fe.Logger, files.Dockerfile, settingsFiles)
 	if err != nil {
 		fe.Logger.Error("Could not extract images from docker files", err)
 		return nil, err
@@ -37,15 +40,15 @@ func (fe *ImagesExtractor) ExtractAndMergeImagesFromFiles(files types.FileImages
 	return imagesFromFiles, nil
 }
 
-func (fe *ImagesExtractor) ExtractFiles(scanPath string) (types.FileImages, string, error) {
-
+func (fe *ImagesExtractor) ExtractFiles(scanPath string) (types.FileImages, map[string]map[string]string, string, error) {
 	filesPath, err := extractCompressedPath(fe.Logger, scanPath)
 	if err != nil {
 		fe.Logger.Error("Could not extract compressed folder: %s", err)
-		return types.FileImages{}, scanPath, err
+		return types.FileImages{}, nil, scanPath, err
 	}
 
 	var f types.FileImages
+	envFiles := make(map[string][]string)
 
 	err = filepath.Walk(filesPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -68,6 +71,11 @@ func (fe *ImagesExtractor) ExtractFiles(scanPath string) (types.FileImages, stri
 			})
 		}
 
+		if strings.HasSuffix(info.Name(), ".env") || strings.HasSuffix(info.Name(), ".env_cxcontainers") {
+			dir := filepath.Dir(path)
+			envFiles[dir] = append(envFiles[dir], path)
+		}
+
 		return nil
 	})
 
@@ -85,7 +93,57 @@ func (fe *ImagesExtractor) ExtractFiles(scanPath string) (types.FileImages, stri
 	printFilePaths(fe.Logger, f.Dockerfile, "Successfully found dockerfiles")
 	printFilePaths(fe.Logger, f.DockerCompose, "Successfully found docker compose files")
 
-	return f, filesPath, nil
+	envVars := parseEnvFiles(envFiles)
+	return f, envVars, filesPath, nil
+}
+
+func parseEnvFiles(envFiles map[string][]string) map[string]map[string]string {
+	envVars := make(map[string]map[string]string)
+
+	for dir, files := range envFiles {
+		for _, file := range files {
+			fileVars, err := parseEnvFile(file)
+			if err != nil {
+				continue // skip on error
+			}
+			if envVars[dir] == nil {
+				envVars[dir] = make(map[string]string)
+			}
+			for k, v := range fileVars {
+				envVars[dir][k] = v
+			}
+		}
+	}
+
+	return envVars
+}
+
+func parseEnvFile(filePath string) (map[string]string, error) {
+	envVars := make(map[string]string)
+
+	file, err := os.Open(filePath)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+		parts := strings.SplitN(line, "=", 2)
+		if len(parts) == 2 {
+			envVars[parts[0]] = parts[1]
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
+
+	return envVars, nil
 }
 
 func (fe *ImagesExtractor) SaveObjectToFile(folderPath string, obj interface{}) error {

@@ -6,17 +6,18 @@ import (
 	"github.com/CheckmarxDev/containers-resolver/internal/logger"
 	"github.com/CheckmarxDev/containers-resolver/internal/types"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 )
 
-func ExtractImagesFromDockerfiles(logger *logger.Logger, filePaths []types.FilePath) ([]types.ImageModel, error) {
+func ExtractImagesFromDockerfiles(logger *logger.Logger, filePaths []types.FilePath, envFiles map[string]map[string]string) ([]types.ImageModel, error) {
 	var imageNames []types.ImageModel
 
 	for _, filePath := range filePaths {
 		logger.Debug("going to extract images from dockerfile %s", filePath)
 
-		fileImages, err := extractImagesFromDockerfile(logger, filePath)
+		fileImages, err := extractImagesFromDockerfile(logger, filePath, envFiles)
 		if err != nil {
 			logger.Warn("could not extract images from dockerfile %s err: %+v", filePath, err)
 		}
@@ -27,10 +28,11 @@ func ExtractImagesFromDockerfiles(logger *logger.Logger, filePaths []types.FileP
 	return imageNames, nil
 }
 
-func extractImagesFromDockerfile(logger *logger.Logger, filePath types.FilePath) ([]types.ImageModel, error) {
+func extractImagesFromDockerfile(logger *logger.Logger, filePath types.FilePath, envFiles map[string]map[string]string) ([]types.ImageModel, error) {
 	var imageNames []types.ImageModel
 	aliases := make(map[string]string)
 	argsAndEnv := make(map[string]string)
+	mergedEnvVars := resolveEnvVariables(filePath.FullPath, envFiles)
 
 	file, err := os.Open(filePath.FullPath)
 	if err != nil {
@@ -47,17 +49,17 @@ func extractImagesFromDockerfile(logger *logger.Logger, filePath types.FilePath)
 	for scanner.Scan() {
 		line := scanner.Text()
 
+		// Parse ARG and ENV lines within the Dockerfile
 		if match := regexp.MustCompile(`^\s*(ARG|ENV)\s+(\w+)=([^\s]+)`).FindStringSubmatch(line); match != nil {
 			varName := match[2]
 			varValue := match[3]
 			argsAndEnv[varName] = varValue
 		}
 
-		for varName, varValue := range argsAndEnv {
-			placeholder := fmt.Sprintf("${%s}", varName)
-			line = strings.ReplaceAll(line, placeholder, varValue)
-		}
+		// Replace placeholders with values from mergedEnvVars and argsAndEnv
+		line = replacePlaceholders(line, mergedEnvVars, argsAndEnv)
 
+		// Parse FROM instructions
 		if match := regexp.MustCompile(`^\s*FROM\s+(?:--platform=[^\s]+\s+)?([\w./-]+(?::[\w.-]+)?)(?:\s+AS\s+(\w+))?`).FindStringSubmatch(line); match != nil {
 			imageName := match[1]
 			alias := match[2]
@@ -110,6 +112,55 @@ func extractImagesFromDockerfile(logger *logger.Logger, filePath types.FilePath)
 		return nil, err
 	}
 	return imageNames, nil
+}
+
+func replacePlaceholders(line string, envVars, argsAndEnv map[string]string) string {
+	for varName, varValue := range envVars {
+		placeholderWithBraces := fmt.Sprintf("${%s}", varName)
+		line = strings.ReplaceAll(line, placeholderWithBraces, varValue)
+
+		placeholderWithoutBraces := fmt.Sprintf("$%s", varName)
+		line = strings.ReplaceAll(line, placeholderWithoutBraces, varValue)
+	}
+
+	for varName, varValue := range argsAndEnv {
+		placeholderWithBraces := fmt.Sprintf("${%s}", varName)
+		line = strings.ReplaceAll(line, placeholderWithBraces, varValue)
+
+		placeholderWithoutBraces := fmt.Sprintf("$%s", varName)
+		line = strings.ReplaceAll(line, placeholderWithoutBraces, varValue)
+	}
+
+	return line
+}
+
+func resolveEnvVariables(dockerfilePath string, envFiles map[string]map[string]string) map[string]string {
+	resolvedVars := make(map[string]string)
+
+	dirs := getDirsForHierarchy(dockerfilePath)
+	for _, dir := range dirs {
+		if envVars, ok := envFiles[dir]; ok {
+			for k, v := range envVars {
+				if _, exists := resolvedVars[k]; !exists {
+					resolvedVars[k] = v
+				}
+			}
+		}
+	}
+
+	return resolvedVars
+}
+
+func getDirsForHierarchy(dockerfilePath string) []string {
+	var dirs []string
+
+	dir := filepath.Dir(dockerfilePath)
+	for dir != "" && dir != "." && dir != "/" {
+		dirs = append(dirs, dir)
+		dir = filepath.Dir(dir)
+	}
+
+	return dirs
 }
 
 func resolveAlias(alias string, aliases map[string]string) string {
