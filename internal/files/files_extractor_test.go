@@ -197,16 +197,15 @@ func TestExtractAndMergeImagesFromFiles(t *testing.T) {
 }
 
 func TestExtractFiles(t *testing.T) {
-	// Initialize logger
 	l := logger.NewLogger(false)
 	extractor := &ImagesExtractor{Logger: l}
 
-	// Define test scenarios
 	scenarios := []struct {
-		Name              string
-		InputPath         string
-		ExpectedFiles     types.FileImages
-		ExpectedErrString string
+		Name                 string
+		InputPath            string
+		ExpectedFiles        types.FileImages
+		ExpectedSettingFiles map[string]map[string]string
+		ExpectedErrString    string
 	}{
 		{
 			Name:      "FolderInput",
@@ -235,6 +234,10 @@ func TestExtractFiles(t *testing.T) {
 						},
 					},
 				},
+			},
+			ExpectedSettingFiles: map[string]map[string]string{
+				"../../test_files/imageExtraction/env":          {"IMAGE": "DEF", "TAG": "2.3.4"},
+				"../../test_files/imageExtraction/env/sub-fold": {"IMAGE": "XYZ", "TAG": "3.3.3"},
 			},
 			ExpectedErrString: "",
 		},
@@ -272,7 +275,7 @@ func TestExtractFiles(t *testing.T) {
 	for _, scenario := range scenarios {
 		t.Run(scenario.Name, func(t *testing.T) {
 			// Run the function
-			files, _, _, err := extractor.ExtractFiles(scenario.InputPath)
+			files, settingsFiles, _, err := extractor.ExtractFiles(scenario.InputPath)
 
 			// Check for errors
 			if scenario.ExpectedErrString != "" {
@@ -288,6 +291,11 @@ func TestExtractFiles(t *testing.T) {
 				}
 				if !CompareHelm(files.Helm, scenario.ExpectedFiles.Helm) {
 					t.Errorf("Extracted Helm charts mismatch for scenario '%s'", scenario.Name)
+				}
+				if scenario.Name == "FolderInput" {
+					if !CompareSettingsFiles(settingsFiles, scenario.ExpectedSettingFiles) {
+						t.Errorf("Extracted Settings files charts mismatch for scenario '%s'", scenario.Name)
+					}
 				}
 			}
 		})
@@ -375,6 +383,29 @@ func CompareHelm(a, b []types.HelmChartInfo) bool {
 		for j := range a[i].TemplateFiles {
 			// Compare FullPath and RelativePath of each FilePath struct
 			if a[i].TemplateFiles[j].FullPath != b[i].TemplateFiles[j].FullPath || a[i].TemplateFiles[j].RelativePath != b[i].TemplateFiles[j].RelativePath {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+func CompareSettingsFiles(a, b map[string]map[string]string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for key, subMapA := range a {
+		subMapB, exists := b[key]
+		if !exists {
+			return false
+		}
+		if len(subMapA) != len(subMapB) {
+			return false
+		}
+		for subKey, valueA := range subMapA {
+			valueB, exists := subMapB[subKey]
+
+			if !exists || valueA != valueB {
 				return false
 			}
 		}
