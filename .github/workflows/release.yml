@@ -43,7 +43,7 @@ jobs:
           echo "tag=${latest_tag}" >> $GITHUB_ENV
 
       - name: Bump Patch Version
-        id: bumps
+        id: bump
         uses: cbrgm/semver-bump-action@main
         with:
           current-version: ${{ env.tag }}
@@ -51,8 +51,9 @@ jobs:
 
       - name: Create a new tag
         run: |
-          git tag ${{ steps.bump.outputs.new_version }} -m "${{ env.formatted_title }}"
-          git push origin ${{ steps.bump.outputs.new_version }}
+          new_tag=${{ steps.bump.outputs.new_version }}
+          git tag $new_tag -m "${{ env.formatted_title }}"
+          git push origin $new_tag
 
       - name: Create release from tag
         uses: actions/create-release@v1
