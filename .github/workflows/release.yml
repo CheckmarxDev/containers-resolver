@@ -14,10 +14,12 @@ jobs:
     steps:
       - name: Checkout the repository
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
       - name: Git auth config
         run: |
           git config --local user.email "cx-ast-ci@checkmarx.com"
           git config --local user.name "${{ secrets.GH_USERNAME}}"
+
       - name: Get and Format the PR Title
         id: get_pr_title
         run: |
@@ -30,13 +32,18 @@ jobs:
             exit 1
           fi
           echo "formatted_title=$formatted_title" >> $GITHUB_ENV
+
+      - name: Fetch All Tags
+        run: git fetch --tags
+
       - name: Get Latest Tag
         id: get_tag
         run: |
           latest_tag=$(git describe --tags `git rev-list --tags --max-count=1`)
           echo "tag=${latest_tag}" >> $GITHUB_ENV
+
       - name: Bump Patch Version
-        id: bump
+        id: bumps
         uses: cbrgm/semver-bump-action@main
         with:
           current-version: ${{ env.tag }}
@@ -46,6 +53,7 @@ jobs:
         run: |
           git tag ${{ steps.bump.outputs.new_version }} -m "${{ steps.get_pr_title.outputs.pr_title }}"
           git push origin ${{ steps.bump.outputs.new_version }}
+
       - name: Create release from tag
         uses: actions/create-release@v1
         with:
