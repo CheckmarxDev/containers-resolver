@@ -3,9 +3,9 @@ name: Release Containers resolver Go module new version
 on:
   pull_request:
     types:
-    - closed
+      - closed
     branches:
-    - main
+      - main
 
 jobs:
   tag-and-release:
@@ -51,7 +51,7 @@ jobs:
 
       - name: Create a new tag
         run: |
-          git tag ${{ steps.bump.outputs.new_version }} -m "${{ steps.get_pr_title.outputs.pr_title }}"
+          git tag ${{ steps.bump.outputs.new_version }} -m "${{ env.formatted_title }}"
           git push origin ${{ steps.bump.outputs.new_version }}
 
       - name: Create release from tag
