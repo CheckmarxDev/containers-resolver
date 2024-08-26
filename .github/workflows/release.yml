@@ -21,9 +21,18 @@ jobs:
       - name: Get the latest tag
         id: get_tag
         run: echo ::set-output name=tag::$(git describe --tags `git rev-list --tags --max-count=1`)
-      - name: Get the PR Title
+      - name: Get and Format the PR Title
         id: get_pr_title
-        run: echo ::set-output name=pr_title::${{ github.event.pull_request.title }}
+        run: |
+          pr_title="${{ github.event.pull_request.title }}"
+          # Use grep with regex to extract the format (AST-000) from the title
+          formatted_title=$(echo "$pr_title" | grep -oE "\(AST-[0-9]+\)")
+          # If formatted_title is empty, set a default value or handle the error
+          if [ -z "$formatted_title" ]; then
+            echo "No valid format found in PR title."
+            exit 1
+          fi
+          echo "formatted_title=$formatted_title" >> $GITHUB_ENV
       - name: Bump Patch Version
         id: bump
         uses: cbrgm/semver-bump-action@main
