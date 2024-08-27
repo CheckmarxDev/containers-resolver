@@ -1,3 +1,4 @@
+# FROM ddd:test
 FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 # Install ReSharper GlobalTools
 RUN dotnet tool install --global JetBrains.ReSharper.GlobalTools --version 2021.3.0
