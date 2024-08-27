@@ -3,12 +3,13 @@ package extractors
 import (
 	"bufio"
 	"fmt"
-	"github.com/CheckmarxDev/containers-resolver/internal/logger"
-	"github.com/CheckmarxDev/containers-resolver/internal/types"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/CheckmarxDev/containers-resolver/internal/logger"
+	"github.com/CheckmarxDev/containers-resolver/internal/types"
 )
 
 func ExtractImagesFromDockerfiles(logger *logger.Logger, filePaths []types.FilePath, envFiles map[string]map[string]string) ([]types.ImageModel, error) {
@@ -58,6 +59,10 @@ func extractImagesFromDockerfile(logger *logger.Logger, filePath types.FilePath,
 
 		// Replace placeholders with values from mergedEnvVars and argsAndEnv
 		line = replacePlaceholders(line, mergedEnvVars, argsAndEnv)
+
+		if strings.HasPrefix(strings.TrimSpace(line), "#") {
+			continue
+		}
 
 		// Parse FROM instructions
 		if match := regexp.MustCompile(`^\s*FROM\s+(?:--platform=[^\s]+\s+)?([\w./-]+(?::[\w.-]+)?)(?:\s+AS\s+(\w+))?`).FindStringSubmatch(line); match != nil {
