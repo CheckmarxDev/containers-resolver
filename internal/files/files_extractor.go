@@ -23,7 +23,7 @@ func (fe *ImagesExtractor) ExtractAndMergeImagesFromFiles(files types.FileImages
 		return nil, err
 	}
 
-	dockerComposeFileImages, err := extractors.ExtractImagesFromDockerComposeFiles(fe.Logger, files.DockerCompose)
+	dockerComposeFileImages, err := extractors.ExtractImagesFromDockerComposeFiles(fe.Logger, files.DockerCompose, settingsFiles)
 	if err != nil {
 		fe.Logger.Error("Could not extract images from docker compose files", err)
 		return nil, err

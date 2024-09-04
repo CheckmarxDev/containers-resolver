@@ -14,7 +14,9 @@ func TestExtractImagesFromDockerComposeFiles(t *testing.T) {
 		{FullPath: "../../test_files/imageExtraction/dockerCompose/docker-compose-2.yaml", RelativePath: "docker-compose-2.yaml"},
 	}
 
-	images, err := ExtractImagesFromDockerComposeFiles(l, filePaths)
+	envVars := map[string]map[string]string{}
+
+	images, err := ExtractImagesFromDockerComposeFiles(l, filePaths, envVars)
 	if err != nil {
 		t.Errorf("Error extracting images: %v", err)
 	}
@@ -23,6 +25,7 @@ func TestExtractImagesFromDockerComposeFiles(t *testing.T) {
 		"postgres:12.0": {Origin: types.DockerComposeFileOrigin, Path: "docker-compose-2.yaml"},
 		"minio/minio:RELEASE.2020-06-22T03-12-50Z": {Origin: types.DockerComposeFileOrigin, Path: "docker-compose-2.yaml"},
 		"redis:6.0.10-alpine":                      {Origin: types.DockerComposeFileOrigin, Path: "docker-compose-2.yaml"},
+		"source.azure.io/api:latest":               {Origin: types.DockerComposeFileOrigin, Path: "docker-compose-2.yaml"},
 		"buildimage:latest":                        {Origin: types.DockerComposeFileOrigin, Path: "docker-compose.yaml"},
 	}
 
@@ -56,7 +59,13 @@ func TestExtractImagesFromDockerComposeFile(t *testing.T) {
 	l := logger.NewLogger(false)
 	filePath := types.FilePath{FullPath: "../../test_files/imageExtraction/dockerCompose/docker-compose-2.yaml", RelativePath: "docker-compose-2.yaml"}
 
-	images, err := extractImagesFromDockerComposeFile(l, filePath)
+	envVars := map[string]map[string]string{
+		"../../test_files/imageExtraction/dockerCompose": {
+			"MARKETER_IMAGE": "source.azure.io/api:3.18",
+		},
+	}
+
+	images, err := extractImagesFromDockerComposeFile(l, filePath, envVars)
 	if err != nil {
 		t.Errorf("Error extracting images: %v", err)
 	}
@@ -65,6 +74,7 @@ func TestExtractImagesFromDockerComposeFile(t *testing.T) {
 		"postgres:12.0": {Origin: types.DockerComposeFileOrigin, Path: "docker-compose-2.yaml"},
 		"minio/minio:RELEASE.2020-06-22T03-12-50Z": {Origin: types.DockerComposeFileOrigin, Path: "docker-compose-2.yaml"},
 		"redis:6.0.10-alpine":                      {Origin: types.DockerComposeFileOrigin, Path: "docker-compose-2.yaml"},
+		"source.azure.io/api:3.18":                 {Origin: types.DockerComposeFileOrigin, Path: "docker-compose-2.yaml"},
 	}
 
 	if len(images) != len(expectedImages) {
@@ -98,7 +108,9 @@ func TestExtractImagesFromDockerComposeFiles_NoFilesFound(t *testing.T) {
 
 	filePaths := []types.FilePath{} // No files provided
 
-	images, err := ExtractImagesFromDockerComposeFiles(l, filePaths)
+	envVars := map[string]map[string]string{}
+
+	images, err := ExtractImagesFromDockerComposeFiles(l, filePaths, envVars)
 	if err != nil {
 		t.Errorf("Error extracting images: %v", err)
 	}
@@ -115,7 +127,9 @@ func TestExtractImagesFromDockerComposeFiles_NoImagesFound(t *testing.T) {
 		{FullPath: "../../test_files/imageExtraction/dockerCompose/docker-compose-5.yaml", RelativePath: "docker-compose-5.yaml"}, // Empty Docker Compose file
 	}
 
-	images, err := ExtractImagesFromDockerComposeFiles(l, filePaths)
+	envVars := map[string]map[string]string{}
+
+	images, err := ExtractImagesFromDockerComposeFiles(l, filePaths, envVars)
 	if err != nil {
 		t.Errorf("Error extracting images: %v", err)
 	}

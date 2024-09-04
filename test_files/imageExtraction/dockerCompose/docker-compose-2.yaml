@@ -1,6 +1,9 @@
 # To run locally: docker-compose up --build --abort-on-container-exit
 version: "3.7"
 services:
+  web:
+    image:  ${MARKETER_IMAGE:-source.azure.io/api:latest}
+
   database:
     image: postgres:12.0
     ports:
@@ -29,3 +32,4 @@ services:
     image: redis:6.0.10-alpine
     ports:
       - 6379:6379
+
