@@ -1,6 +1,6 @@
 module github.com/CheckmarxDev/containers-resolver
 
-go 1.22.5
+go 1.22.7
 
 require (
 	github.com/anchore/stereoscope v0.0.3

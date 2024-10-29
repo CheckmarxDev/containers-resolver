@@ -7,6 +7,37 @@ import (
 	"github.com/CheckmarxDev/containers-resolver/internal/types"
 )
 
+func TestGetDirsForHierarchy(t *testing.T) {
+	tests := []struct {
+		path     string
+		expected []string
+	}{
+		//{
+		//	path:     `C:\ֿ\Users\\ELCHAN~1\\AppData\\Local\\Temp\\cx-unzipped-temp-dir\\CX-AST-main 2\\Dockerfile`,
+		//	expected: []string{`C:\ֿ\Users\\ELCHAN~1\\AppData\\Local\\Temp\\cx-unzipped-temp-dir\\CX-AST-main 2`, `C:\ֿ\Users\\ELCHAN~1\\AppData\\Local\\Temp\\cx-unzipped-temp-dir`, `C:\ֿ\Users\\ELCHAN~1\\AppData\\Local\\Temp`, `C:\ֿ\Users\\ELCHAN~1\\AppData\\Local`, `C:\ֿ\Users\\ELCHAN~1\\AppData`, `C:\ֿ\Users\\ELCHAN~1`, `C:\ֿ\Users`},
+		//},
+		{
+			path:     `/Users/elchan/Documents/Product/Source code/CX-AST-main 2/Dockerfile`,
+			expected: []string{`/Users/elchan/Documents/Product/Source code/CX-AST-main 2`, `/Users/elchan/Documents/Product/Source code`, `/Users/elchan/Documents/Product`, `/Users/elchan/Documents`, `/Users/elchan`, `/Users`},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.path, func(t *testing.T) {
+
+			result := getDirsForHierarchy(test.path)
+			if len(result) != len(test.expected) {
+				t.Fatalf("expected %d directories, got %d", len(test.expected), len(result))
+			}
+			for i, dir := range result {
+				if dir != test.expected[i] {
+					t.Errorf("expected %s, got %s", test.expected[i], dir)
+				}
+			}
+		})
+	}
+}
+
 func TestExtractImagesFromDockerfiles(t *testing.T) {
 	l := logger.NewLogger(false)
 
