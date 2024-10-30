@@ -169,7 +169,6 @@ func getDirsForHierarchy(dockerfilePath string) []string {
 		dirs = append(dirs, dir)
 		dir = filepath.Dir(dir)
 	}
-
 	return dirs
 }
 
