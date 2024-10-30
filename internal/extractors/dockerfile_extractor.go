@@ -161,11 +161,19 @@ func getDirsForHierarchy(dockerfilePath string) []string {
 
 	dir := filepath.Dir(dockerfilePath)
 	for dir != "" && dir != "." && dir != "/" {
+
+		if isRootDir(dir) {
+			break
+		}
+
 		dirs = append(dirs, dir)
 		dir = filepath.Dir(dir)
 	}
-
 	return dirs
+}
+
+func isRootDir(dir string) bool {
+	return (len(dir) == 3 && strings.HasSuffix(dir, `:\`)) || (len(dir) >= 2 && strings.HasPrefix(dir, `\\`))
 }
 
 func resolveAlias(alias string, aliases map[string]string) string {
