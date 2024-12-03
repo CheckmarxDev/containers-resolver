@@ -1,23 +1,16 @@
 package containersResolver
 
 import (
-	"github.com/CheckmarxDev/containers-resolver/internal/files"
+	"github.com/Checkmarx-Containers/extractor-types-package/types"
+	"github.com/Checkmarx-Containers/images-extractor-package/pkg/imagesExtractor"
+	"github.com/Checkmarx-Containers/syft-packages-extractor-package/pkg/syftPackagesExtractor"
 	"github.com/CheckmarxDev/containers-resolver/internal/logger"
-	se "github.com/CheckmarxDev/containers-resolver/internal/syftExtractor"
-	"github.com/CheckmarxDev/containers-resolver/internal/types"
 )
 
 func Resolve(scanPath string, resolutionFolderPath string, images []string, isDebug bool) error {
 
 	resolverLogger := logger.NewLogger(isDebug)
 
-	imagesExtractor := files.ImagesExtractor{
-		Logger: resolverLogger,
-	}
-
-	syftExtractor := se.SyftExtractor{
-		Logger: resolverLogger,
-	}
 	resolverLogger.Debug("Resolve func parameters: scanPath=%s, resolutionFolderPath=%s, images=%s, isDebug=%t", scanPath, resolutionFolderPath, images, isDebug)
 
 	// 0. validate input
@@ -35,14 +28,14 @@ func Resolve(scanPath string, resolutionFolderPath string, images []string, isDe
 	}
 
 	//2. extract images from files
-	imagesToAnalyze, err := imagesExtractor.ExtractAndMergeImagesFromFiles(filesWithImages, toImageModels(images), settingsFiles)
+	imagesToAnalyze, err := imagesExtractor.ExtractAndMergeImagesFromFiles(filesWithImages, types.ToImageModels(images), settingsFiles)
 	if err != nil {
 		resolverLogger.Error("Could not extract images from files err: %+v", err)
 		return err
 	}
 
 	//4. get images resolution
-	resolutionResult, err := syftExtractor.AnalyzeImages(imagesToAnalyze)
+	resolutionResult, err := syftPackagesExtractor.AnalyzeImages(imagesToAnalyze)
 	if err != nil {
 		resolverLogger.Error("Could not analyze images. err: %v", err)
 		return err
@@ -64,7 +57,7 @@ func Resolve(scanPath string, resolutionFolderPath string, images []string, isDe
 }
 
 func validate(resolutionFolderPath string) error {
-	isValidFolderPath, err := files.IsValidFolderPath(resolutionFolderPath)
+	isValidFolderPath, err := imagesExtractor.IsValidFolderPath(resolutionFolderPath)
 	if err != nil || isValidFolderPath == false {
 		return err
 	}
@@ -73,28 +66,10 @@ func validate(resolutionFolderPath string) error {
 
 func cleanup(originalPath string, outputPath string) error {
 	if outputPath != "" && outputPath != originalPath {
-		err := files.DeleteDirectory(outputPath)
+		err := imagesExtractor.DeleteDirectory(outputPath)
 		if err != nil {
 			return err
 		}
 	}
 	return nil
-}
-
-func toImageModels(images []string) []types.ImageModel {
-	imageNames := []types.ImageModel{}
-
-	for _, image := range images {
-		imageNames = append(imageNames, types.ImageModel{
-			Name: image,
-			ImageLocations: []types.ImageLocation{
-				{
-					Origin: types.UserInput,
-					Path:   types.NoFilePath,
-				},
-			},
-		})
-	}
-
-	return imageNames
 }
