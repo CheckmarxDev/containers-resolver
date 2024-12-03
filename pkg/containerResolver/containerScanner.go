@@ -1,9 +1,9 @@
 package containersResolver
 
 import (
-	"github.com/Checkmarx-Containers/extractor-types-package/types"
-	"github.com/Checkmarx-Containers/images-extractor-package/pkg/imagesExtractor"
-	"github.com/Checkmarx-Containers/syft-packages-extractor-package/pkg/syftPackagesExtractor"
+	"github.com/Checkmarx-Containers/extractor-types/types"
+	"github.com/Checkmarx-Containers/images-extractor/pkg/imagesExtractor"
+	"github.com/Checkmarx-Containers/syft-packages-extractor/pkg/syftPackagesExtractor"
 	"github.com/CheckmarxDev/containers-resolver/internal/logger"
 )
 

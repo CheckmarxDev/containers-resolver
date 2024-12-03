@@ -1,11 +1,11 @@
 module github.com/CheckmarxDev/containers-resolver
 
-go 1.22.9
+go 1.23.3
 
 require (
-	github.com/Checkmarx-Containers/extractor-types-package v1.0.0
-	github.com/Checkmarx-Containers/images-extractor-package v1.0.0
-	github.com/Checkmarx-Containers/syft-packages-extractor-package v1.0.0
+	github.com/Checkmarx-Containers/extractor-types v1.0.1
+	github.com/Checkmarx-Containers/images-extractor v1.0.1
+	github.com/Checkmarx-Containers/syft-packages-extractor v1.0.1
 )
 
 require (
@@ -19,7 +19,7 @@ require (
 	github.com/MakeNowJust/heredoc v1.0.0 // indirect
 	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Masterminds/semver v1.5.0 // indirect
-	github.com/Masterminds/semver/v3 v3.3.0 // indirect
+	github.com/Masterminds/semver/v3 v3.3.1 // indirect
 	github.com/Masterminds/sprig/v3 v3.3.0 // indirect
 	github.com/Masterminds/squirrel v1.5.4 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
@@ -47,12 +47,12 @@ require (
 	github.com/blang/semver/v4 v4.0.0 // indirect
 	github.com/bmatcuk/doublestar/v4 v4.7.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
-	github.com/chai2010/gettext-go v1.0.2 // indirect
+	github.com/chai2010/gettext-go v1.0.3 // indirect
 	github.com/charmbracelet/lipgloss v1.0.0 // indirect
 	github.com/charmbracelet/x/ansi v0.4.5 // indirect
 	github.com/cloudflare/circl v1.3.8 // indirect
 	github.com/containerd/cgroups/v3 v3.0.3 // indirect
-	github.com/containerd/containerd v1.7.23 // indirect
+	github.com/containerd/containerd v1.7.24 // indirect
 	github.com/containerd/containerd/api v1.7.19 // indirect
 	github.com/containerd/continuity v0.4.2 // indirect
 	github.com/containerd/errdefs v0.3.0 // indirect
