@@ -7,7 +7,12 @@ import (
 	"github.com/CheckmarxDev/containers-resolver/internal/logger"
 )
 
-func Resolve(scanPath string, resolutionFolderPath string, images []string, isDebug bool) error {
+type ContainersResolver struct {
+	imagesExtractor.ImagesExtractorInterface
+	syftPackagesExtractor.SyftPackagesExtractorInterface
+}
+
+func (cr ContainersResolver) Resolve(scanPath string, resolutionFolderPath string, images []string, isDebug bool) error {
 
 	resolverLogger := logger.NewLogger(isDebug)
 
@@ -21,28 +26,28 @@ func Resolve(scanPath string, resolutionFolderPath string, images []string, isDe
 	}
 
 	//1. extract files
-	filesWithImages, settingsFiles, outputPath, err := imagesExtractor.ExtractFiles(scanPath)
+	filesWithImages, settingsFiles, outputPath, err := cr.ExtractFiles(scanPath)
 	if err != nil {
 		resolverLogger.Error("Could not extract files. err: %v", err)
 		return err
 	}
 
 	//2. extract images from files
-	imagesToAnalyze, err := imagesExtractor.ExtractAndMergeImagesFromFiles(filesWithImages, types.ToImageModels(images), settingsFiles)
+	imagesToAnalyze, err := cr.ExtractAndMergeImagesFromFiles(filesWithImages, types.ToImageModels(images), settingsFiles)
 	if err != nil {
 		resolverLogger.Error("Could not extract images from files err: %+v", err)
 		return err
 	}
 
 	//4. get images resolution
-	resolutionResult, err := syftPackagesExtractor.AnalyzeImages(imagesToAnalyze)
+	resolutionResult, err := cr.AnalyzeImages(imagesToAnalyze)
 	if err != nil {
 		resolverLogger.Error("Could not analyze images. err: %v", err)
 		return err
 	}
 
 	//5. save to resolution file path
-	err = imagesExtractor.SaveObjectToFile(resolutionFolderPath, resolutionResult)
+	err = cr.SaveObjectToFile(resolutionFolderPath, resolutionResult)
 	if err != nil {
 		resolverLogger.Error("Could not save resolution result. err: %v", err)
 		return err

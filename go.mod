@@ -2,10 +2,14 @@ module github.com/CheckmarxDev/containers-resolver
 
 go 1.23.3
 
+//replace github.com/Checkmarx-Containers/images-extractor => ../images-extractor-package
+//replace github.com/Checkmarx-Containers/syft-packages-extractor => ../syft-packages-extractor-package
+
 require (
 	github.com/Checkmarx-Containers/extractor-types v1.0.1
-	github.com/Checkmarx-Containers/images-extractor v1.0.2
-	github.com/Checkmarx-Containers/syft-packages-extractor v1.0.2
+	github.com/Checkmarx-Containers/images-extractor v1.0.0
+	github.com/Checkmarx-Containers/syft-packages-extractor v1.0.0
+	github.com/stretchr/testify v1.10.0
 )
 
 require (
@@ -186,6 +190,7 @@ require (
 	github.com/pjbgf/sha1cd v0.3.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pkg/profile v1.7.0 // indirect
+	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/prometheus/client_golang v1.20.2 // indirect
 	github.com/prometheus/client_model v0.6.1 // indirect
 	github.com/prometheus/common v0.55.0 // indirect
@@ -212,6 +217,7 @@ require (
 	github.com/spf13/cobra v1.8.1 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.19.0 // indirect
+	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/sylabs/sif/v2 v2.20.0 // indirect
 	github.com/sylabs/squashfs v1.0.0 // indirect
