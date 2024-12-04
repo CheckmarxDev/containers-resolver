@@ -2,13 +2,11 @@ module github.com/CheckmarxDev/containers-resolver
 
 go 1.23.3
 
-//replace github.com/Checkmarx-Containers/images-extractor => ../images-extractor-package
-//replace github.com/Checkmarx-Containers/syft-packages-extractor => ../syft-packages-extractor-package
-
 require (
 	github.com/Checkmarx-Containers/extractor-types v1.0.1
 	github.com/Checkmarx-Containers/images-extractor v1.0.0
 	github.com/Checkmarx-Containers/syft-packages-extractor v1.0.0
+	github.com/rs/zerolog v1.33.0
 	github.com/stretchr/testify v1.10.0
 )
 
@@ -196,7 +194,6 @@ require (
 	github.com/prometheus/common v0.55.0 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
-	github.com/rs/zerolog v1.33.0 // indirect
 	github.com/rubenv/sql-migrate v1.7.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/saferwall/pe v1.5.6 // indirect

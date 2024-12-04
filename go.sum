@@ -64,7 +64,7 @@ github.com/BurntSushi/toml v1.4.0/go.mod h1:ukJfTF/6rtPPRCnwkur4qwRxa8vTRFBF0uk2
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
 github.com/Checkmarx-Containers/extractor-types v1.0.1 h1:WqiamgjBkL3b8L9jpa3M/xlDXurwPqOgZHMGLECMUTc=
 github.com/Checkmarx-Containers/extractor-types v1.0.1/go.mod h1:58puljBgophfLCVi6WP/mZDi8ojid9nsbPQoAdLukdg=
-github.com/Checkmarx-Containers/images-extractor v1.0.0 h1:/SH2EVjZmbWCu/gnSLjJ8TY3Pgim4n1K9D+nTfIJPew=
+github.com/Checkmarx-Containers/images-extractor v1.0.0 h1:1L0e9JZpEskF7vNRmM3YvYm2916sZBiyeq+oPvrVHZw=
 github.com/Checkmarx-Containers/images-extractor v1.0.0/go.mod h1:xA8OtxsLc1eGqSD7QV9UuJZYDCp/goeqmmXZ29bBd24=
 github.com/Checkmarx-Containers/syft-packages-extractor v1.0.0 h1:mmfBmaynl72Sv5FJDMh+gFPdWPokxPy/lQoBHZcojtE=
 github.com/Checkmarx-Containers/syft-packages-extractor v1.0.0/go.mod h1:GujqWekdtHnZTsGRXMXdYuKHXZQVdN9qTbrE9aNenrY=
