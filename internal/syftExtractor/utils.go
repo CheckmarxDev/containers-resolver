@@ -4,6 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"regexp"
+	"strings"
+
 	"github.com/CheckmarxDev/containers-resolver/internal/logger"
 	"github.com/CheckmarxDev/containers-resolver/internal/types"
 	"github.com/anchore/stereoscope"
@@ -17,8 +20,6 @@ import (
 	"github.com/anchore/syft/syft/sbom"
 	"github.com/anchore/syft/syft/source"
 	"github.com/anchore/syft/syft/source/stereoscopesource"
-	"regexp"
-	"strings"
 )
 
 var specialExtractors = []string{
@@ -303,10 +304,28 @@ func getRpmSourceVersion(pack pkg.Package, rpmMeta pkg.RpmDBEntry) string {
 }
 
 func getDistro(release *linux.Release) string {
-	if release == nil || release.ID == "" || release.VersionID == "" {
+	if release == nil || (release.ID == "" || (release.VersionID == "" && release.VersionCodename == "")) {
 		return types.NoFilePath
 	}
-	return fmt.Sprintf("%s:%s", release.ID, release.VersionID)
+
+	codenameLookup := map[string]string{
+		"trixie": "13",
+	}
+
+	if release.VersionID == "" {
+		if mappedValue, ok := codenameLookup[release.VersionCodename]; ok {
+			return fmt.Sprintf("%s:%s", release.ID, mappedValue)
+		}
+	}
+
+	return fmt.Sprintf("%s:%s", release.ID, VersionIDOrCodename(*release))
+}
+
+func VersionIDOrCodename(release linux.Release) string {
+	if release.VersionID != "" {
+		return release.VersionID
+	}
+	return release.VersionCodename
 }
 
 func extractPackageLayerIds(locations file.LocationSet) []string {
